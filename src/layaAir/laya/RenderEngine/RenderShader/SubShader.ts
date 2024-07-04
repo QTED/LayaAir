@@ -1,7 +1,6 @@
 import { ShaderDataType, ShaderDataItem } from "../../RenderDriver/DriverDesign/RenderDevice/ShaderData";
 import { ISubshaderData } from "../../RenderDriver/RenderModuleData/Design/ISubShaderData";
 import { Shader3D } from "../../RenderEngine/RenderShader/Shader3D";
-import { UniformBufferParamsType, UnifromBufferData } from "../../RenderEngine/UniformBufferData";
 import { LayaGL } from "../../layagl/LayaGL";
 import { IShaderCompiledObj, ShaderCompile } from "../../webgl/utils/ShaderCompile";
 import { ShaderPass } from "./ShaderPass";
@@ -69,9 +68,6 @@ export class SubShader {
     readonly _uniformTypeMap: Map<string, ShaderDataType>;
 
     /**@internal */
-    readonly _uniformBufferDataMap: Map<string, UnifromBufferData> = new Map();
-
-    /**@internal */
     _owner: Shader3D;
     /**@internal */
     _flags: any = {};
@@ -94,20 +90,9 @@ export class SubShader {
         for (const key in uniformMap) {
             if (typeof uniformMap[key] == "object") {
                 let block = <{ [uniformName: string]: ShaderDataType }>(uniformMap[key]);
-                let blockUniformMap = new Map<string, UniformBufferParamsType>();
                 for (const uniformName in block) {
-                    let uniformType = ShaderDataTypeToUniformBufferType(block[uniformName]);
-                    blockUniformMap.set(uniformName, uniformType);
-
                     this._uniformTypeMap.set(uniformName, block[uniformName]);
                 }
-
-                let blockUniformIndexMap = new Map<number, UniformBufferParamsType>();
-                blockUniformMap.forEach((value, key) => {
-                    blockUniformIndexMap.set(Shader3D.propertyNameToID(key), value);
-                });
-                let blockData = new UnifromBufferData(blockUniformIndexMap);
-                this._uniformBufferDataMap.set(key, blockData);
             }
             else {
                 let unifromType = <ShaderDataType>uniformMap[key];
@@ -161,26 +146,6 @@ export class SubShader {
                 }
             }
         }
-    }
-
-}
-
-function ShaderDataTypeToUniformBufferType(shaderDataType: ShaderDataType) {
-
-    switch (shaderDataType) {
-        case ShaderDataType.Float:
-            return UniformBufferParamsType.Number;
-        case ShaderDataType.Vector2:
-            return UniformBufferParamsType.Vector2;
-        case ShaderDataType.Vector3:
-            return UniformBufferParamsType.Vector3;
-        case ShaderDataType.Vector4:
-        case ShaderDataType.Color:
-            return UniformBufferParamsType.Vector4;
-        case ShaderDataType.Matrix4x4:
-            return UniformBufferParamsType.Matrix4x4;
-        default:
-            throw "ShaderDataType can not be in UniformBuffer.";
     }
 
 }

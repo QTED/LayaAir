@@ -1,38 +1,38 @@
 import { Config3D } from "../../../Config3D";
+import { ILaya } from "../../../ILaya";
 import { Node } from "../../display/Node";
 import { Event } from "../../events/Event";
-import { BaseTexture } from "../../resource/BaseTexture";
-import { PostProcess } from "../component/PostProcess";
-import { DepthPass } from "../depthMap/DepthPass";
-import { BoundFrustum } from "../math/BoundFrustum";
-import { Ray } from "../math/Ray";
-import { Picker } from "../utils/Picker";
-import { BaseCamera } from "./BaseCamera";
-import { CommandBuffer } from "./render/command/CommandBuffer";
-import { RenderContext3D } from "./render/RenderContext3D";
-import { Scene3D } from "./scene/Scene3D";
-import { FilterMode } from "../../RenderEngine/RenderEnum/FilterMode";
-import { RenderTargetFormat } from "../../RenderEngine/RenderEnum/RenderTargetFormat";
-import { RenderCapable } from "../../RenderEngine/RenderEnum/RenderCapable";
-import { ILaya } from "../../../ILaya";
-import { TextureCube } from "../../resource/TextureCube";
-import { TextureFormat } from "../../RenderEngine/RenderEnum/TextureFormat";
-import { Texture2D } from "../../resource/Texture2D";
+import { LayaGL } from "../../layagl/LayaGL";
 import { Matrix4x4 } from "../../maths/Matrix4x4";
 import { Quaternion } from "../../maths/Quaternion";
 import { Vector2 } from "../../maths/Vector2";
 import { Vector3 } from "../../maths/Vector3";
 import { Vector4 } from "../../maths/Vector4";
-import { DepthTextureMode, RenderTexture } from "../../resource/RenderTexture";
-import { Stat } from "../../utils/Stat";
-import { WrapMode } from "../../RenderEngine/RenderEnum/WrapMode";
-import { LayaGL } from "../../layagl/LayaGL";
-import { Laya3DRender } from "../RenderObjs/Laya3DRender";
+import { Viewport } from "../../maths/Viewport";
 import { IRender3DProcess } from "../../RenderDriver/DriverDesign/3DRenderPass/I3DRenderPass";
 import { ICameraNodeData } from "../../RenderDriver/RenderModuleData/Design/3D/I3DRenderModuleData";
-import { Transform3D } from "./Transform3D";
+import { FilterMode } from "../../RenderEngine/RenderEnum/FilterMode";
+import { RenderCapable } from "../../RenderEngine/RenderEnum/RenderCapable";
+import { RenderTargetFormat } from "../../RenderEngine/RenderEnum/RenderTargetFormat";
+import { TextureFormat } from "../../RenderEngine/RenderEnum/TextureFormat";
+import { WrapMode } from "../../RenderEngine/RenderEnum/WrapMode";
+import { BaseTexture } from "../../resource/BaseTexture";
+import { DepthTextureMode, RenderTexture } from "../../resource/RenderTexture";
+import { Texture2D } from "../../resource/Texture2D";
+import { TextureCube } from "../../resource/TextureCube";
+import { Stat } from "../../utils/Stat";
+import { PostProcess } from "../component/PostProcess";
+import { DepthPass } from "../depthMap/DepthPass";
 import { Cluster } from "../graphics/renderPath/Cluster";
-import { Viewport } from "../../maths/Viewport";
+import { BoundFrustum } from "../math/BoundFrustum";
+import { Ray } from "../math/Ray";
+import { Laya3DRender } from "../RenderObjs/Laya3DRender";
+import { Picker } from "../utils/Picker";
+import { BaseCamera } from "./BaseCamera";
+import { CommandBuffer } from "./render/command/CommandBuffer";
+import { RenderContext3D } from "./render/RenderContext3D";
+import { Scene3D } from "./scene/Scene3D";
+import { Transform3D } from "./Transform3D";
 
 /**
  * 相机清除标记。
@@ -1264,10 +1264,6 @@ export class Camera extends BaseCamera {
         this._prepareCameraToRender();
         this._applyViewProject(this.viewMatrix, this.projectionMatrix, context.invertY);
         this._contextApply(context);
-        // todo proterty name
-        if (this._cameraUniformData && this._cameraUniformUBO) {
-            this._cameraUniformUBO.setDataByUniformBufferData(this._cameraUniformData);
-        }
 
         if (this.clearFlag == CameraClearFlags.Sky) {
             scene.skyRenderer.setRenderElement(this.skyRenderElement);
