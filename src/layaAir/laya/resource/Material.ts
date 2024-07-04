@@ -1,9 +1,7 @@
 import { Config } from "../../Config";
 import { Config3D } from "../../Config3D";
 import { ILaya } from "../../ILaya";
-import { BufferUsage } from "../RenderEngine/RenderEnum/BufferTargetType";
-import { Shader3D } from "../RenderEngine/RenderShader/Shader3D";
-import { UniformBufferObject } from "../RenderEngine/UniformBufferObject";
+import { Event } from "../events/Event";
 import { LayaGL } from "../layagl/LayaGL";
 import { Color } from "../maths/Color";
 import { Matrix3x3 } from "../maths/Matrix3x3";
@@ -12,15 +10,15 @@ import { Vector2 } from "../maths/Vector2";
 import { Vector3 } from "../maths/Vector3";
 import { Vector4 } from "../maths/Vector4";
 import { Loader } from "../net/Loader";
+import { ShaderData, ShaderDataDefaultValue, ShaderDataItem, ShaderDataType } from "../RenderDriver/DriverDesign/RenderDevice/ShaderData";
+import { IDefineDatas } from "../RenderDriver/RenderModuleData/Design/IDefineDatas";
+import { RenderState } from "../RenderDriver/RenderModuleData/Design/RenderState";
+import { ShaderDefine } from "../RenderDriver/RenderModuleData/Design/ShaderDefine";
+import { Shader3D } from "../RenderEngine/RenderShader/Shader3D";
 import { Handler } from "../utils/Handler";
 import { IClone } from "../utils/IClone";
 import { BaseTexture } from "./BaseTexture";
 import { Resource } from "./Resource";
-import { Event } from "../events/Event";
-import { ShaderDefine } from "../RenderDriver/RenderModuleData/Design/ShaderDefine";
-import { ShaderData, ShaderDataDefaultValue, ShaderDataItem, ShaderDataType } from "../RenderDriver/DriverDesign/RenderDevice/ShaderData";
-import { RenderState } from "../RenderDriver/RenderModuleData/Design/RenderState";
-import { IDefineDatas } from "../RenderDriver/RenderModuleData/Design/IDefineDatas";
 
 
 
@@ -494,37 +492,6 @@ export class Material extends Resource implements IClone {
     }
 
     /**
-     * @internal
-     * @param shader 
-     * @returns 
-     */
-    private _bindShaderInfo(shader: Shader3D) {
-        //update UBOData by Shader
-        let subShader = shader.getSubShaderAt(0);//TODO	
-        // ubo
-        let shaderUBODatas = subShader._uniformBufferDataMap;
-        if (!shaderUBODatas)
-            return;
-        for (let key of shaderUBODatas.keys()) {
-            //create data
-            let uboData = shaderUBODatas.get(key).clone();
-            //create UBO
-            let ubo = UniformBufferObject.create(key, BufferUsage.Dynamic, uboData.getbyteLength(), false);
-            this._shaderValues.setUniformBuffer(Shader3D.propertyNameToID(key), ubo);
-            this._shaderValues._addCheckUBO(key, ubo, uboData);
-        }
-    }
-
-    /**
-     * @internal
-     * 清除UBO
-     * @returns 
-     */
-    private _releaseUBOData() {
-        this._shaderValues._releaseUBOData();
-    }
-
-    /**
      * 销毁资源
      * @protected
      * @internal
@@ -532,7 +499,6 @@ export class Material extends Resource implements IClone {
      * @override
      */
     protected _disposeResource(): void {
-        this._releaseUBOData();
         this._shaderValues.destroy();
         this._shaderValues = null;
     }
@@ -562,13 +528,6 @@ export class Material extends Resource implements IClone {
             //throw new Error("Material: unknown shader name.");
             console.warn(`Material: unknown shader name '${name}'`);
             this._shader = Shader3D.find("BLINNPHONG");
-        }
-
-        if (Config3D._uniformBlock) {
-            this._releaseUBOData();
-            //bind shader info
-            // todo 清理残留 shader data
-            this._bindShaderInfo(this._shader);
         }
 
         // set default value

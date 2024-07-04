@@ -1,17 +1,23 @@
+import { Config3D } from "../../../../Config3D";
 import { Laya } from "../../../../Laya";
 import { LayaEnv } from "../../../../LayaEnv";
-import { CommandEncoder } from "../../../layagl/CommandEncoder";
-import { Color } from "../../../maths/Color";
-import { Vector4 } from "../../../maths/Vector4";
-import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
 import { BufferTargetType, BufferUsage } from "../../../RenderEngine/RenderEnum/BufferTargetType";
 import { RenderCapable } from "../../../RenderEngine/RenderEnum/RenderCapable";
 import { RenderClearFlag } from "../../../RenderEngine/RenderEnum/RenderClearFlag";
 import { RenderParams } from "../../../RenderEngine/RenderEnum/RenderParams";
+import { GPUEngineStatisticsInfo } from "../../../RenderEngine/RenderEnum/RenderStatInfo";
+import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { ShaderVariable } from "../../../RenderEngine/RenderShader/ShaderVariable";
+import { CommandEncoder } from "../../../layagl/CommandEncoder";
+import { Color } from "../../../maths/Color";
+import { Vector4 } from "../../../maths/Vector4";
 import { IRenderEngine } from "../../DriverDesign/RenderDevice/IRenderEngine";
 import { IRenderEngineFactory } from "../../DriverDesign/RenderDevice/IRenderEngineFactory";
 import { ITextureContext } from "../../DriverDesign/RenderDevice/ITextureContext";
+import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
+import { IDefineDatas } from "../../RenderModuleData/Design/IDefineDatas";
+import { ShaderDefine } from "../../RenderModuleData/Design/ShaderDefine";
+import { WebGLShaderData } from "../../RenderModuleData/WebModuleData/WebGLShaderData";
 import { GL2TextureContext } from "./GL2TextureContext";
 import { GLTextureContext } from "./GLTextureContext";
 import { GLBuffer } from "./WebGLEngine/GLBuffer";
@@ -24,11 +30,7 @@ import { GLShaderInstance } from "./WebGLEngine/GLShaderInstance";
 import { GLVertexState } from "./WebGLEngine/GLVertexState";
 import { GlCapable } from "./WebGLEngine/GlCapable";
 import { WebGLConfig } from "./WebGLEngine/WebGLConfig";
-import { ShaderDefine } from "../../RenderModuleData/Design/ShaderDefine";
-import { WebGLShaderData } from "../../RenderModuleData/WebModuleData/WebGLShaderData";
-import { IDefineDatas } from "../../RenderModuleData/Design/IDefineDatas";
 import { WebGLInternalTex } from "./WebGLInternalTex";
-import { GPUEngineStatisticsInfo } from "../../../RenderEngine/RenderEnum/RenderStatInfo";
 import { EventDispatcher } from "../../../events/EventDispatcher";
 import { WebGLInternalRT } from "./WebGLInternalRT";
 import { RenderTargetFormat } from "../../../RenderEngine/RenderEnum/RenderTargetFormat";
@@ -166,6 +168,12 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
         this._webglMode = webglMode;
         this._initStatisticsInfo();
         WebGLEngine.instance = this;
+
+        if (Config3D._uniformBlock) {
+            // todo
+            // let configShaderValue = Shader3D._configDefineValues;
+            // configShaderValue.add(Shader3D.SHADERDEFINE_ENUNIFORMBLOCK);
+        }
     }
 
     endFrame(): void {
@@ -540,7 +548,6 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
      * @internal
      */
     uploadUniforms(shader: GLShaderInstance, commandEncoder: CommandEncoder, shaderData: WebGLShaderData, uploadUnTexture: boolean): number {
-        shaderData.applyUBO && shaderData.applyUBOData();
         var data: any = shaderData._data;
         var shaderUniform: any[] = commandEncoder.getArrayData();
         var shaderCall: number = 0;

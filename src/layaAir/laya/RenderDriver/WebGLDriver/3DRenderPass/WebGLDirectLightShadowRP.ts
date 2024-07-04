@@ -203,10 +203,6 @@ export class WebGLDirectLightShadowRP {
                 context.setScissor(Vector4.tempVec4);
             }
 
-            if (sliceData.cameraUBO && sliceData.cameraUBData) {
-                sliceData.cameraUBO.setDataByUniformBufferData(sliceData.cameraUBData);
-            }
-
             context.setClearData(RenderClearFlag.Depth, Color.BLACK, 1, 0);
             this._renderQueue.renderQueue(context);
             this._applyCasterPassCommandBuffer(context);

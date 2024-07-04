@@ -1,17 +1,10 @@
-import { Plane } from "../math/Plane";
-import { BoundSphere } from "../math/BoundSphere";
+import { LayaGL } from "../../layagl/LayaGL";
 import { Matrix4x4 } from "../../maths/Matrix4x4";
 import { Vector3 } from "../../maths/Vector3";
-import { LayaGL } from "../../layagl/LayaGL";
-import { BoundFrustum } from "../math/BoundFrustum";
 import { ShaderData } from "../../RenderDriver/DriverDesign/RenderDevice/ShaderData";
-import { Config3D } from "../../../Config3D";
-import { UniformBufferObject } from "../../RenderEngine/UniformBufferObject";
-import { BufferUsage } from "../../RenderEngine/RenderEnum/BufferTargetType";
-import { BaseCamera } from "../core/BaseCamera";
-import { UnifromBufferData } from "../../RenderEngine/UniformBufferData";
-
-
+import { BoundFrustum } from "../math/BoundFrustum";
+import { BoundSphere } from "../math/BoundSphere";
+import { Plane } from "../math/Plane";
 
 /**
  * camera裁剪数据
@@ -58,29 +51,10 @@ export class ShadowSpotData {
     projectionMatrix: Matrix4x4 = new Matrix4x4();
     viewProjectMatrix: Matrix4x4 = new Matrix4x4();
     cameraCullInfo: CameraCullInfo;
-    cameraUBO: UniformBufferObject;
-    cameraUBData: UnifromBufferData;
 
     constructor() {
         this.cameraShaderValue = LayaGL.renderDeviceFactory.createShaderData(null);
-
-        if (Config3D._uniformBlock) {
-            let cameraUBO = UniformBufferObject.getBuffer(UniformBufferObject.UBONAME_CAMERA, 0);
-            let cameraUBData = BaseCamera.createCameraUniformBlock();
-
-            if (!cameraUBO) {
-                cameraUBO = UniformBufferObject.create(UniformBufferObject.UBONAME_CAMERA, BufferUsage.Dynamic, cameraUBData.getbyteLength(), false);
-            }
-
-            this.cameraShaderValue._addCheckUBO(UniformBufferObject.UBONAME_CAMERA, cameraUBO, cameraUBData);
-            this.cameraShaderValue.setUniformBuffer(BaseCamera.CAMERAUNIFORMBLOCK, cameraUBO);
-
-            this.cameraUBO = cameraUBO;
-            this.cameraUBData = cameraUBData;
-        }
-
         this.cameraCullInfo = new CameraCullInfo();
-
     }
 }
 
@@ -90,8 +64,6 @@ export class ShadowSpotData {
  */
 export class ShadowSliceData {
     cameraShaderValue: ShaderData;
-    cameraUBO: UniformBufferObject;
-    cameraUBData: UnifromBufferData;
     position: Vector3 = new Vector3();
     offsetX: number;
     offsetY: number;
@@ -106,21 +78,5 @@ export class ShadowSliceData {
 
     constructor() {
         this.cameraShaderValue = LayaGL.renderDeviceFactory.createShaderData(null);
-
-        if (Config3D._uniformBlock) {
-            let cameraUBO = UniformBufferObject.getBuffer(UniformBufferObject.UBONAME_CAMERA, 0);
-            let cameraUBData = BaseCamera.createCameraUniformBlock();
-
-            if (!cameraUBO) {
-                cameraUBO = UniformBufferObject.create(UniformBufferObject.UBONAME_CAMERA, BufferUsage.Dynamic, cameraUBData.getbyteLength(), false);
-            }
-
-            this.cameraShaderValue._addCheckUBO(UniformBufferObject.UBONAME_CAMERA, cameraUBO, cameraUBData);
-            this.cameraShaderValue.setUniformBuffer(BaseCamera.CAMERAUNIFORMBLOCK, cameraUBO);
-
-            this.cameraUBO = cameraUBO;
-            this.cameraUBData = cameraUBData;
-        }
-
     }
 }

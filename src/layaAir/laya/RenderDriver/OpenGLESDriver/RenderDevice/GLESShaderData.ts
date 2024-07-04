@@ -1,5 +1,3 @@
-import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
-import { UniformBufferObject } from "../../../RenderEngine/UniformBufferObject";
 import { Color } from "../../../maths/Color";
 import { Matrix3x3 } from "../../../maths/Matrix3x3";
 import { Matrix4x4 } from "../../../maths/Matrix4x4";
@@ -44,21 +42,6 @@ export class GLESShaderData extends ShaderData {
     _releaseUBOData() {
         //throw new Error("Method not implemented.");//TODO
         //TODO GLES Temply dont surpport UBO
-    }
-
-    /**
-    * 
-    * @param index 
-    * @param value 
-    */
-    setUniformBuffer(index: number, value: UniformBufferObject) {
-        //TODO
-    }
-
-    getUniformBuffer(index: number): UniformBufferObject {
-        //throw new Error("Method not implemented.");
-        //TODO
-        return null;
     }
 
     getDefineData(): RTDefineDatas {

@@ -1,5 +1,6 @@
 
 import { CullMode } from "../../../RenderEngine/RenderEnum/CullMode";
+import { GPUEngineStatisticsInfo } from "../../../RenderEngine/RenderEnum/RenderStatInfo";
 import { GLSLCodeGenerator } from "../../../RenderEngine/RenderShader/GLSLCodeGenerator";
 import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { ShaderPass } from "../../../RenderEngine/RenderShader/ShaderPass";
@@ -7,16 +8,14 @@ import { ShaderVariable } from "../../../RenderEngine/RenderShader/ShaderVariabl
 import { RenderStateContext } from "../../../RenderEngine/RenderStateContext";
 import { CommandEncoder } from "../../../layagl/CommandEncoder";
 import { LayaGL } from "../../../layagl/LayaGL";
-import { Stat } from "../../../utils/Stat";
 import { ShaderCompileDefineBase, ShaderProcessInfo } from "../../../webgl/utils/ShaderCompileDefineBase";
 import { IShaderInstance } from "../../DriverDesign/RenderDevice/IShaderInstance";
-import { RenderState } from "../../RenderModuleData/Design/RenderState";
 import { ShaderData } from "../../DriverDesign/RenderDevice/ShaderData";
+import { RenderState } from "../../RenderModuleData/Design/RenderState";
+import { WebGLShaderData } from "../../RenderModuleData/WebModuleData/WebGLShaderData";
 import { WebGLCommandUniformMap } from "./WebGLCommandUniformMap";
 import { WebGLEngine } from "./WebGLEngine";
 import { GLShaderInstance } from "./WebGLEngine/GLShaderInstance";
-import { WebGLShaderData } from "../../RenderModuleData/WebModuleData/WebGLShaderData";
-import { GPUEngineStatisticsInfo } from "../../../RenderEngine/RenderEnum/RenderStatInfo";
 
 /**
  * <code>ShaderInstance</code> 类用于实现ShaderInstance。

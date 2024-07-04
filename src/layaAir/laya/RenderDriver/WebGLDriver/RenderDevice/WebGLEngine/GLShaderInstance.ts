@@ -1,7 +1,6 @@
 import { LayaEnv } from "../../../../../LayaEnv";
 import { GPUEngineStatisticsInfo } from "../../../../RenderEngine/RenderEnum/RenderStatInfo";
 import { ShaderVariable } from "../../../../RenderEngine/RenderShader/ShaderVariable";
-import { UniformBufferObject } from "../../../../RenderEngine/UniformBufferObject";
 import { Matrix3x3 } from "../../../../maths/Matrix3x3";
 import { Matrix4x4 } from "../../../../maths/Matrix4x4";
 import { Vector2 } from "../../../../maths/Vector2";
@@ -10,7 +9,6 @@ import { Vector4 } from "../../../../maths/Vector4";
 import { BaseTexture } from "../../../../resource/BaseTexture";
 import { Texture2D } from "../../../../resource/Texture2D";
 import { TextureCube } from "../../../../resource/TextureCube";
-import { InternalTexture } from "../../../DriverDesign/RenderDevice/InternalTexture";
 import { ShaderDataType } from "../../../DriverDesign/RenderDevice/ShaderData";
 import { WebGLEngine } from "../WebGLEngine";
 import { GLObject } from "./GLObject";
@@ -215,7 +213,7 @@ export class GLShaderInstance extends GLObject {
                 one.fun = this._uniform_samplerCube;
                 break;
             case (gl as WebGL2RenderingContext).UNIFORM_BUFFER:
-                one.fun = this._uniform_UniformBuffer;
+                // one.fun = this._uniform_UniformBuffer;
                 break;
             default:
                 throw new Error("compile shader err!");
@@ -499,17 +497,6 @@ export class GLShaderInstance extends GLObject {
         var gl: WebGLRenderingContext = this._gl;
         this._bindTexture(one.textureID, gl.TEXTURE_CUBE_MAP, value);
         return 0;
-    }
-
-    /**
-     * @internal
-     * @param one 
-     * @param value 
-     * @returns 
-     */
-    _uniform_UniformBuffer(one: any, value: UniformBufferObject) {
-        value._bindUniformBufferBase();
-        return 1;
     }
 
     /**
