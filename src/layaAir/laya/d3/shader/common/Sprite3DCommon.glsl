@@ -1,11 +1,15 @@
 #if !defined(Sprite3DCommon_lib)
     #define Sprite3DCommon_lib
 
-uniform mat4 u_WorldMat;
-
-uniform vec4 u_WroldInvertFront; // x: invert front face
-
-    
+#ifdef ENUNIFORMBLOCK
+    uniform Sprite3D {
+        mat4 u_WorldMat;
+        vec4 u_WroldInvertFront; // x: invert front face
+    };
+#else // ENUNIFORMBLOCK
+    uniform mat4 u_WorldMat;
+    uniform vec4 u_WroldInvertFront; // x: invert front face
+#endif // ENUNIFORMBLOCK
 
 
 vec2 tranformLightMapUV(in vec2 texcoord, in vec4 tilingOffset)

@@ -34,7 +34,7 @@ export function roundUp(n: number, align: number) {
 /**
  * Uniform内存块管理
  */
-export class UniformBufferManager {
+export abstract class UniformBufferManager {
     renderContext: any; //渲染上下文对象
     clustersAll: Map<number, UniformBufferCluster[]>; //所有大内存块，按尺寸分组
     clustersCur: Map<number, UniformBufferCluster> //当前大内存块，按尺寸分组
@@ -250,9 +250,7 @@ export class UniformBufferManager {
      * @param size 字节长度
      * @param name 名称
      */
-    createGPUBuffer(size: number, name?: string) {
-        //todo
-    }
+    abstract createGPUBuffer(size: number, name?: string): any;
 
     /**
      * 将数据写入GPU内存
@@ -261,24 +259,18 @@ export class UniformBufferManager {
      * @param offset 数据在大内存中的偏移量（字节）
      * @param size 写入的数据长度（字节）
      */
-    writeBuffer(buffer: any, data: ArrayBuffer, offset: number, size: number) {
-        //todo
-    }
+    abstract writeBuffer(buffer: any, data: ArrayBuffer, offset: number, size: number): void;
 
     /**
      * 统计GPU内存使用量
      * @param bytes 字节
      */
-    statisGPUMemory(bytes: number) {
-        //todo
-    }
+    abstract statisGPUMemory(bytes: number): void;
 
     /**
      * 统计上传次数
      * @param count 上传次数
      * @param bytes 上传字节
      */
-    statisUpload(count: number, bytes: number) {
-        //todo
-    }
+    abstract statisUpload(count: number, bytes: number): void;
 }

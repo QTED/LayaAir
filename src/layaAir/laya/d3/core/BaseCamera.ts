@@ -10,7 +10,6 @@ import { CommandUniformMap } from "../../RenderDriver/DriverDesign/RenderDevice/
 import { IRenderEngine } from "../../RenderDriver/DriverDesign/RenderDevice/IRenderEngine";
 import { ShaderData, ShaderDataType } from "../../RenderDriver/DriverDesign/RenderDevice/ShaderData";
 import { ShaderDefine } from "../../RenderDriver/RenderModuleData/Design/ShaderDefine";
-import { BufferUsage } from "../../RenderEngine/RenderEnum/BufferTargetType";
 import { Shader3D } from "../../RenderEngine/RenderShader/Shader3D";
 import { SkyRenderElement } from "./render/SkyRenderElement";
 import { Scene3D } from "./scene/Scene3D";

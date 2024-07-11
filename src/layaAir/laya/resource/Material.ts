@@ -10,6 +10,7 @@ import { Vector2 } from "../maths/Vector2";
 import { Vector3 } from "../maths/Vector3";
 import { Vector4 } from "../maths/Vector4";
 import { Loader } from "../net/Loader";
+import { UniformProperty } from "../RenderDriver/DriverDesign/RenderDevice/CommandUniformMap";
 import { ShaderData, ShaderDataDefaultValue, ShaderDataItem, ShaderDataType } from "../RenderDriver/DriverDesign/RenderDevice/ShaderData";
 import { IDefineDatas } from "../RenderDriver/RenderModuleData/Design/IDefineDatas";
 import { RenderState } from "../RenderDriver/RenderModuleData/Design/RenderState";
@@ -515,7 +516,8 @@ export class Material extends Resource implements IClone {
      * @returns 
      */
     effectiveProperty() {
-        return this._shader.getSubShaderAt(0)._uniformTypeMap;
+        // todo 返回类型改变
+        return this._shader.getSubShaderAt(0)._uniformMap;
     }
 
     /**
@@ -530,11 +532,15 @@ export class Material extends Resource implements IClone {
             this._shader = Shader3D.find("BLINNPHONG");
         }
 
+        // clear data
+        this.shaderData.clearDefine();
+        this.shaderData.clearData();
+
         // set default value
         // todo subShader 选择
         let subShader = this._shader.getSubShaderAt(0);
         let defaultValue = subShader._uniformDefaultValue;
-        let typeMap = subShader._uniformTypeMap;
+        let typeMap = subShader._uniformMap;
         this.applyUniformDefaultValue(typeMap, defaultValue);
         this.ownerELement && (this.ownerELement.material = this);//更新RenderElementRenderQueue
     }
@@ -542,16 +548,20 @@ export class Material extends Resource implements IClone {
     /**
      * @internal
      */
-    applyUniformDefaultValue(typeMap: Map<string, ShaderDataType>, defaultValue: Record<string, ShaderDataItem>) {
-        typeMap.forEach((type, key) => {
-            if (defaultValue && defaultValue[key] != undefined) {
-                let value = defaultValue[key];
-                this.setShaderData(key, type, value);
-            }
-            else {
-                let value = ShaderDataDefaultValue(type);
-                if (value) {
-                    this.setShaderData(key, type, value);
+    applyUniformDefaultValue(uniformMap: Map<number, UniformProperty>, defaultValue: Record<string, ShaderDataItem>) {
+        uniformMap.forEach((uniform, key) => {
+            if (uniform.arrayLength <= 0) {
+                let type = uniform.uniformtype;
+                let uniformName = uniform.propertyName;
+                if (defaultValue && defaultValue[uniformName] != undefined) {
+                    let value = defaultValue[uniformName];
+                    this.setShaderData(uniformName, type, value);
+                }
+                else {
+                    let value = ShaderDataDefaultValue(type);
+                    if (value) {
+                        this.setShaderDataByIndex(key, type, value);
+                    }
                 }
             }
         });
@@ -565,7 +575,6 @@ export class Material extends Resource implements IClone {
     getBoolByIndex(uniformIndex: number): boolean {
         return this.shaderData.getBool(uniformIndex);
     }
-
 
     /**
      * 通过索引设置bool值

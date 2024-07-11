@@ -21,7 +21,7 @@
 
 	#include "ShadowSampleTent.glsl";
 
-uniform vec4 u_ShadowParams;
+// uniform vec4 u_ShadowParams;
 
 	#define ShadowStrength	   u_ShadowParams.x
 	#define SpotShadowStrength u_ShadowParams.y
@@ -31,7 +31,7 @@ uniform vec4 u_ShadowParams;
 	    #define CALCULATE_SHADOWS
 varying vec4 v_ShadowCoord;
 TEXTURE2D_SHADOW(u_ShadowMap);
-uniform vec4 u_ShadowMapSize;
+// uniform vec4 u_ShadowMapSize;
 
 // #ifdef SHADOW_CASCADE
 // const int c_MaxCascadeCount = 4;
@@ -41,8 +41,8 @@ uniform vec4 u_ShadowMapSize;
 // uniform mat4 u_ShadowMatrices[c_MaxCascadeCount];
 // uniform vec4 u_ShadowSplitSpheres[c_MaxCascadeCount];
 
-uniform mat4 u_ShadowMatrices[4];
-uniform vec4 u_ShadowSplitSpheres[4];
+// uniform mat4 u_ShadowMatrices[4];
+// uniform vec4 u_ShadowSplitSpheres[4];
 	#endif // SHADOW
 
 	// 聚光灯阴影
@@ -50,8 +50,8 @@ uniform vec4 u_ShadowSplitSpheres[4];
 	    #define CALCULATE_SPOTSHADOWS
 varying vec4 v_SpotShadowCoord;
 TEXTURE2D_SHADOW(u_SpotShadowMap);
-uniform vec4 u_SpotShadowMapSize;
-uniform mat4 u_SpotViewProjectMatrix;
+// uniform vec4 u_SpotShadowMapSize;
+// uniform mat4 u_SpotViewProjectMatrix;
 	#endif // SHADOW_SPOT
 
 float sampleShdowMapFiltered4(TEXTURE2D_SHADOW_PARAM(shadowMap), vec3 shadowCoord, vec4 shadowMapSize)

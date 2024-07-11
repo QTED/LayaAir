@@ -1,4 +1,4 @@
-import { CommandUniformMap, UniformProperty } from "../../DriverDesign/RenderDevice/CommandUniformMap";
+import { CommandUniformMap } from "../../DriverDesign/RenderDevice/CommandUniformMap";
 import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
 
 export class GLESCommandUniformMap extends CommandUniformMap {
@@ -28,12 +28,4 @@ export class GLESCommandUniformMap extends CommandUniformMap {
         this._nativeObj.addShaderUniform(propertyID, propertyName, uniformtype, block);
     } //兼容WGSL
 
-    /**
-     * 增加一个Uniform
-     * @param propertyID 
-     * @param propertyKey
-     */
-    addShaderBlockUniform(propertyID: number, blockname: string, blockProperty: UniformProperty[]): void {
-        this._nativeObj.addShaderBlockUniform(propertyID, blockname, blockProperty);
-    }
 }

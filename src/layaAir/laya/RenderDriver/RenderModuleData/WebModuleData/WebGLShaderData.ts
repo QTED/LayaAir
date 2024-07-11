@@ -1,14 +1,20 @@
+import { Config3D } from "../../../../Config3D";
+import { LayaGL } from "../../../layagl/LayaGL";
 import { Color } from "../../../maths/Color";
 import { Matrix3x3 } from "../../../maths/Matrix3x3";
 import { Matrix4x4 } from "../../../maths/Matrix4x4";
 import { Vector2 } from "../../../maths/Vector2";
 import { Vector3 } from "../../../maths/Vector3";
 import { Vector4 } from "../../../maths/Vector4";
+import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { BaseTexture } from "../../../resource/BaseTexture";
 import { Resource } from "../../../resource/Resource";
 import { InternalTexture } from "../../DriverDesign/RenderDevice/InternalTexture";
-import { ShaderData } from "../../DriverDesign/RenderDevice/ShaderData";
+import { ShaderData, ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
 import { WebGLEngine } from "../../WebGLDriver/RenderDevice/WebGLEngine";
+import { WebGLUniformBuffer } from "../../WebGLDriver/RenderDevice/WebGLUniformBuffer";
+import { WebGLSubUniformBuffer } from "../../WebGLDriver/RenderDevice/WebGLSubUniformBuffer";
+import { WebGLUniformBufferBase } from "../../WebGLDriver/RenderDevice/WebGLUniformBufferBase";
 import { ShaderDefine } from "../Design/ShaderDefine";
 import { WebDefineDatas } from "./WebDefineDatas";
 
@@ -28,6 +34,14 @@ export class WebGLShaderData extends ShaderData {
 	/** @internal */
 	_defineDatas: WebDefineDatas = new WebDefineDatas();
 
+	/** @internal */
+	uniformBuffers: Map<string, WebGLUniformBuffer>;
+
+	/** @internal */
+	subUniformBuffers: Map<string, WebGLSubUniformBuffer>;
+
+	/** @internal */
+	uniformBuffersPropertyMap: Map<number, WebGLUniformBufferBase>;
 
 	/**
 	 * @internal	
@@ -36,13 +50,86 @@ export class WebGLShaderData extends ShaderData {
 		super(ownerResource);
 		this._initData();
 	}
-
 	/**
 	 * @internal
 	 */
 	_initData(): void {
 		this._data = {};
 		this._gammaColorMap = new Map();
+		this.uniformBuffers = new Map();
+		this.subUniformBuffers = new Map();
+		this.uniformBuffersPropertyMap = new Map();
+	}
+
+	/**
+	 * @internal
+	 * @param name 
+	 * @param uniformMap 
+	 * @returns 
+	 */
+	createUniformBuffer(name: string, uniformMap: Map<number | string, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>): void {
+		if (!Config3D._uniformBlock || this.uniformBuffers.has(name)) {
+			return;
+		}
+
+		let buffer = new WebGLUniformBuffer(name);
+		this.uniformBuffers.set(name, buffer);
+
+		uniformMap.forEach((uniform, key) => {
+			let uniformId = uniform.id;
+			buffer.addUniform(uniformId, uniform.uniformtype, uniform.arrayLength);
+			this.uniformBuffersPropertyMap.set(uniformId, buffer);
+		});
+
+		buffer.create();
+
+		// update shader data to uniform buffer
+		uniformMap.forEach((uniform, key) => {
+			let uniformId = uniform.id;
+			let data = this._data[uniformId];
+			if (data) {
+				buffer.setUniformData(uniformId, uniform.uniformtype, data);
+			}
+		});
+
+		let id = Shader3D.propertyNameToID(name);
+		this._data[id] = buffer;
+
+		return;
+	}
+
+	createSubUniformBuffer(name: string, uniformMap: Map<number, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>) {
+		if (!Config3D._uniformBlock) {
+			return null;
+		}
+		else {
+			// todo 同时清理 UniformBuffers 同名 buffer ?
+			let subBuffer = this.subUniformBuffers.get(name);
+			if (subBuffer) {
+				return subBuffer;
+			}
+		}
+
+		let engine = <WebGLEngine>LayaGL.renderEngine;
+
+		let mgr = engine.bufferMgr;
+		let uniformBuffer = new WebGLSubUniformBuffer(name, uniformMap, mgr, this);
+		uniformBuffer.notifyGPUBufferChange();
+
+		let id = Shader3D.propertyNameToID(name);
+		this._data[id] = uniformBuffer;
+		this.subUniformBuffers.set(name, uniformBuffer);
+
+		uniformMap.forEach(uniform => {
+			let uniformId = uniform.id;
+			let data = this._data[uniformId];
+			if (data) {
+				uniformBuffer.setUniformData(uniformId, uniform.uniformtype, data);
+			}
+			this.uniformBuffersPropertyMap.set(uniformId, uniformBuffer);
+		});
+
+		return uniformBuffer;
 	}
 
 	/**
@@ -88,6 +175,26 @@ export class WebGLShaderData extends ShaderData {
 		this._defineDatas.clear();
 	}
 
+	clearData(): void {
+		for (const key in this._data) {
+			// remove resource reference
+			if (this._data[key] instanceof Resource) {
+				this._data[key]._removeReference();
+			}
+		}
+		this.uniformBuffersPropertyMap.clear();
+
+		this.uniformBuffers.forEach((buffer) => {
+			buffer.destroy();
+		});
+		this.uniformBuffers.clear();
+
+		this.subUniformBuffers.forEach(subBuffer => {
+			subBuffer.destroy();
+		});
+		this.subUniformBuffers.clear();
+	}
+
 	/**
 	 * 获取布尔。
 	 * @param	index shader索引。
@@ -104,6 +211,12 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	setBool(index: number, value: boolean): void {
 		this._data[index] = value;
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			// todo
+			// ubo.setBool(index, value);
+		}
 	}
 
 	/**
@@ -122,6 +235,11 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	setInt(index: number, value: number): void {
 		this._data[index] = value;
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setInt(index, value);
+		}
 	}
 
 	/**
@@ -140,6 +258,11 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	setNumber(index: number, value: number): void {
 		this._data[index] = value;
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setFloat(index, value);
+		}
 	}
 
 	/**
@@ -161,6 +284,11 @@ export class WebGLShaderData extends ShaderData {
 			value.cloneTo(this._data[index]);
 		} else
 			this._data[index] = value.clone();
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setVector2(index, value);
+		}
 	}
 
 	/**
@@ -182,6 +310,11 @@ export class WebGLShaderData extends ShaderData {
 			value.cloneTo(this._data[index]);
 		} else
 			this._data[index] = value.clone();
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setVector3(index, value);
+		}
 	}
 
 	/**
@@ -203,6 +336,11 @@ export class WebGLShaderData extends ShaderData {
 			value.cloneTo(this._data[index]);
 		} else
 			this._data[index] = value.clone();
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setVector4(index, value);
+		}
 	}
 
 	/**
@@ -240,6 +378,11 @@ export class WebGLShaderData extends ShaderData {
 			this._data[index] = linearColor;
 			this._gammaColorMap.set(index, value.clone());
 		}
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setVector4(index, this._data[index]);
+		}
 	}
 
 	/**
@@ -270,6 +413,11 @@ export class WebGLShaderData extends ShaderData {
 		} else {
 			this._data[index] = value.clone();
 		}
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setMatrix4x4(index, value.elements);
+		}
 	}
 
 	/**
@@ -293,6 +441,11 @@ export class WebGLShaderData extends ShaderData {
 		else {
 			this._data[index] = value.clone();
 		}
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setMatrix3x3(index, value.elements);
+		}
 	}
 
 	/**
@@ -311,6 +464,11 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	setBuffer(index: number, value: Float32Array): void {
 		this._data[index] = value;
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setBuffer(index, value);
+		}
 	}
 
 	/**
@@ -377,25 +535,29 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	cloneTo(destObject: WebGLShaderData): void {
 		var dest: WebGLShaderData = <WebGLShaderData>destObject;
-		var destData: { [key: string]: number | boolean | Vector2 | Vector3 | Vector4 | Matrix3x3 | Matrix4x4 | BaseTexture } = dest._data;
+		var destData: { [key: string]: number | boolean | Vector2 | Vector3 | Vector4 | Matrix3x3 | Matrix4x4 | BaseTexture | ArrayLike<any> | WebGLUniformBufferBase } = dest._data;
+
+		destObject.clearData();
 		for (var k in this._data) {//TODO:需要优化,杜绝is判断，慢
 			var value: any = this._data[k];
 			if (value != null) {
 				if (typeof value == "number") {
 					destData[k] = value;
-				} else if (typeof value == "number") {
+				}
+				else if (typeof value == "boolean") {
 					destData[k] = value;
-				} else if (typeof value == "boolean") {
-					destData[k] = value;
-				} else if (value instanceof Vector2) {
+				}
+				else if (value instanceof Vector2) {
 					var v2 = destData[k] || (destData[k] = new Vector2());
 					(<Vector2>value).cloneTo(v2);
 					destData[k] = v2;
-				} else if (value instanceof Vector3) {
+				}
+				else if (value instanceof Vector3) {
 					var v3 = destData[k] || (destData[k] = new Vector3());
 					(<Vector3>value).cloneTo(v3);
 					destData[k] = v3;
-				} else if (value instanceof Vector4) {
+				}
+				else if (value instanceof Vector4) {
 					let color = this.getColor(parseInt(k));
 					if (color) {
 						let clonecolor = color.clone();
@@ -415,12 +577,18 @@ export class WebGLShaderData extends ShaderData {
 					var mat = destData[k] || (destData[k] = new Matrix4x4());
 					(<Matrix4x4>value).cloneTo(mat);
 					destData[k] = mat;
-				} else if (value instanceof BaseTexture) {
+				}
+				else if (value instanceof BaseTexture) {
 					destData[k] = value;
 					value._addReference();
-				} else if (value instanceof Resource) {
+				}
+				else if (value instanceof Resource) {
 					destData[k] = value as any;
 					value._addReference();
+				}
+				// todo array value
+				else if (value instanceof Float32Array) {
+					destData[k] = value.slice();
 				}
 			}
 		}
@@ -428,6 +596,34 @@ export class WebGLShaderData extends ShaderData {
 		this._gammaColorMap.forEach((color, index) => {
 			destObject._gammaColorMap.set(index, color.clone());
 		});
+
+		// this.uniformBuffers.forEach((buffer, key) => {
+		// 	let destBuffer = buffer.clone();
+		// 	dest.uniformBuffers.set(key, destBuffer);
+		// 	destBuffer.descriptor.uniforms.forEach((uniform, key) => {
+		// 		dest.uniformBuffersPropertyMap.set(key, destBuffer);
+		// 	});
+		// 	let bufferId = Shader3D.propertyNameToID(key);
+		// 	destData[bufferId] = destBuffer;
+		// });
+
+		// this.subUniformBuffers.forEach((subBuffer, key) => {
+		// 	let destSubBuffer = new WebGLSubUniformBuffer(key, subBuffer.uniformMap, subBuffer.manager, destObject);
+
+		// 	destSubBuffer.descriptor.uniforms.forEach((uniform, key) => {
+		// 		dest.uniformBuffersPropertyMap.set(key, destSubBuffer);
+		// 		let value = this._data[uniform.index];
+		// 		if (value) {
+		// 			let uniformType = subBuffer.uniformMap.get(uniform.index).uniformtype;
+		// 			destSubBuffer.setUniformData(uniform.index, uniformType, value);
+		// 		}
+		// 	});
+
+		// 	destSubBuffer.notifyGPUBufferChange();
+
+		// 	let bufferId = Shader3D.propertyNameToID(key);
+		// 	destData[bufferId] = destSubBuffer;
+		// });
 	}
 
 	getDefineData(): WebDefineDatas {
@@ -455,6 +651,13 @@ export class WebGLShaderData extends ShaderData {
 		this._data = {};
 		this._gammaColorMap.clear();
 		this._defineDatas.clear();
+
+		this.uniformBuffersPropertyMap.clear();
+
+		this.uniformBuffers.forEach((buffer) => {
+			buffer.destroy();
+		});
+		this.uniformBuffers.clear();
 	}
 
 	destroy(): void {
@@ -470,6 +673,18 @@ export class WebGLShaderData extends ShaderData {
 		this._data = null;
 		this._gammaColorMap.clear();
 		this._gammaColorMap = null;
+
+		this.uniformBuffersPropertyMap.clear();
+
+		this.uniformBuffers.forEach((buffer) => {
+			buffer.destroy();
+		});
+		this.uniformBuffers.clear();
+
+		this.subUniformBuffers.forEach(subBuffer => {
+			subBuffer.destroy();
+		});
+		this.subUniformBuffers.clear();
 	}
 }
 

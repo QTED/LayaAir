@@ -5,7 +5,7 @@ import { LayaGL } from "../../layagl/LayaGL";
 import { ShaderNode } from "../../webgl/utils/ShaderNode";
 import { RenderParams } from "../RenderEnum/RenderParams";
 import { RenderCapable } from "../RenderEnum/RenderCapable";
-import { UniformMapType } from "./SubShader";
+import { UniformProperty } from "../../RenderDriver/DriverDesign/RenderDevice/CommandUniformMap";
 
 /**
  * @internal
@@ -25,66 +25,56 @@ export class GLSLCodeGenerator {
         return res;
     }
 
-    static glslUniformString(uniformsMap: UniformMapType, useUniformBlock: boolean) {
+    static glslUniformString(uniformsMap: Map<number, UniformProperty>, useUniformBlock: boolean) {
+        if (uniformsMap.size == 0) {
+            return "";
+        }
 
         if (useUniformBlock) {
-            let blocksStr = "";
             let uniformsStr = "";
-            for (const key in uniformsMap) {
-                // uniform block
-                if (typeof uniformsMap[key] == "object") {
-                    let blockUniforms = <{ [uniformName: string]: ShaderDataType }>uniformsMap[key];
-                    blocksStr += `uniform ${key} {\n`;
-                    for (const uniformName in blockUniforms) {
-                        let dataType = blockUniforms[uniformName];
-                        let typeStr = getAttributeType(dataType);
-                        if (typeStr != "") {
-                            blocksStr += `${typeStr} ${uniformName};\n`;
-                        }
-                    }
-                    blocksStr += "};\n";
+            let blocksStr = "uniform Material {\n";
+            uniformsMap.forEach((uniform, key) => {
+                let dataType = uniform.uniformtype;
+                let uniformName = uniform.propertyName;
+                if (uniform.arrayLength > 0) {
+                    uniformName = `${uniformName}[${uniform.arrayLength}]`;
                 }
-                else { // uniform
-                    let dataType = <ShaderDataType>uniformsMap[key];
-                    let typeStr = getAttributeType(dataType);
-                    if (typeStr != "") {
-                        uniformsStr += `uniform ${typeStr} ${key};\n`;
+                let typeStr = getAttributeType(dataType);
+                if (typeStr != "") {
+                    if (supportUniformBlock(dataType)) {
+                        blocksStr += `${typeStr} ${uniformName};\n`;
+                    }
+                    else {
+                        uniformsStr += `uniform ${typeStr} ${uniformName};\n`;
                     }
                 }
-            }
-            return blocksStr + uniformsStr;
+            });
+            blocksStr += "};\n";
 
+            return blocksStr + uniformsStr;
         }
         else {
             let uniformsStr = "";
-            for (const key in uniformsMap) {
-                // uniform block
-                if (typeof uniformsMap[key] == "object") {
-                    let blockUniforms = <{ [uniformName: string]: ShaderDataType }>uniformsMap[key];
-                    for (const uniformName in blockUniforms) {
-                        let dataType = blockUniforms[uniformName];
-                        let typeStr = getAttributeType(dataType);
-                        if (typeStr != "") {
-                            uniformsStr += `uniform ${typeStr} ${uniformName};\n`;
-                        }
-                    }
+
+            uniformsMap.forEach((uniform, key) => {
+                let dataType = uniform.uniformtype;
+                let uniformName = uniform.propertyName;
+                if (uniform.arrayLength > 0) {
+                    uniformName = `${uniformName}[${uniform.arrayLength}]`;
                 }
-                else { // uniform
-                    let dataType = <ShaderDataType>uniformsMap[key];
-                    let typeStr = getAttributeType(dataType);
-                    if (typeStr != "") {
-                        uniformsStr += `uniform ${typeStr} ${key};\n`;
-                    }
+                let typeStr = getAttributeType(dataType);
+                if (typeStr != "") {
+                    uniformsStr += `uniform ${typeStr} ${uniformName};\n`;
                 }
-            }
+            });
+
             return uniformsStr;
         }
-
     }
 
     static GLShaderLanguageProcess3D(defineString: string[],
         attributeMap: { [name: string]: [number, ShaderDataType] },
-        uniformMap: UniformMapType, VS: ShaderNode, FS: ShaderNode) {
+        uniformMap: Map<number, UniformProperty>, VS: ShaderNode, FS: ShaderNode) {
 
         var clusterSlices = Config3D.lightClusterCount;
         var defMap: any = {};
@@ -95,8 +85,6 @@ export class GLSLCodeGenerator {
 
         // 拼接 shader attribute
         let useUniformBlock = Config3D._uniformBlock;
-        // todo
-        useUniformBlock = false;
         let attributeglsl = GLSLCodeGenerator.glslAttributeString(attributeMap);
         let uniformglsl = GLSLCodeGenerator.glslUniformString(uniformMap, useUniformBlock);
 
@@ -266,5 +254,28 @@ function getAttributeType(type: ShaderDataType) {
             }
         default:
             return "";
+    }
+}
+
+function supportUniformBlock(type: ShaderDataType) {
+    switch (type) {
+        case ShaderDataType.Int:
+        case ShaderDataType.Bool:
+        case ShaderDataType.Float:
+        case ShaderDataType.Vector2:
+        case ShaderDataType.Vector3:
+        case ShaderDataType.Vector4:
+        case ShaderDataType.Color:
+        case ShaderDataType.Matrix4x4:
+        case ShaderDataType.Matrix3x3:
+            return true;
+        case ShaderDataType.None:
+        case ShaderDataType.Buffer:
+        case ShaderDataType.Texture2D:
+        case ShaderDataType.TextureCube:
+        case ShaderDataType.Texture3D:
+        case ShaderDataType.Texture2DArray:
+        default:
+            return false;
     }
 }

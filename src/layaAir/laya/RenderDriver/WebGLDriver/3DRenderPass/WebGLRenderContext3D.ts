@@ -11,6 +11,7 @@ import { InternalRenderTarget } from "../../DriverDesign/RenderDevice/InternalRe
 import { WebCameraNodeData, WebSceneNodeData } from "../../RenderModuleData/WebModuleData/3D/WebModuleData";
 import { WebDefineDatas } from "../../RenderModuleData/WebModuleData/WebDefineDatas";
 import { WebGLShaderData } from "../../RenderModuleData/WebModuleData/WebGLShaderData";
+import { WebGLCommandUniformMap } from "../RenderDevice/WebGLCommandUniformMap";
 import { WebGLEngine } from "../RenderDevice/WebGLEngine";
 import { WebGLRenderElement3D } from "./WebGLRenderElement3D";
 
@@ -57,8 +58,12 @@ export class WebGLRenderContext3D implements IRenderContext3D {
 
     set sceneData(value: WebGLShaderData) {
         this._sceneData = value;
+        if (value) {
+            // value.createUniformBuffer("Scene3D");
+            let sceneMap = <WebGLCommandUniformMap>LayaGL.renderDeviceFactory.createGlobalUniformMap("Scene3D");
+            value.createUniformBuffer("Scene3D", sceneMap._idata);
+        }
     }
-
 
     get cameraData(): WebGLShaderData {
         return this._cameraData;
@@ -66,6 +71,11 @@ export class WebGLRenderContext3D implements IRenderContext3D {
 
     set cameraData(value: WebGLShaderData) {
         this._cameraData = value;
+        if (value) {
+            // value.createUniformBuffer("BaseCamera");
+            let camereMap = <WebGLCommandUniformMap>LayaGL.renderDeviceFactory.createGlobalUniformMap("BaseCamera");
+            value.createUniformBuffer("BaseCamera", camereMap._idata);
+        }
     }
 
     get sceneModuleData(): WebSceneNodeData {
@@ -147,8 +157,6 @@ export class WebGLRenderContext3D implements IRenderContext3D {
         this._invertY = value;
     }
 
-
-
     /**
      * <code>GLESRenderContext3D<code/>
      */
@@ -182,10 +190,22 @@ export class WebGLRenderContext3D implements IRenderContext3D {
             this._start();
             this._needStart = false;
         }
+        let engine = WebGLEngine.instance;
+        let bufferMgr = engine.bufferMgr;
+        if (bufferMgr) {
+            bufferMgr.startFrame();
+        }
+
         let elements = list.elements;
         for (var i: number = 0, n: number = list.length; i < n; i++) {
             elements[i]._preUpdatePre(this);//render
         }
+
+        if (bufferMgr) {
+            bufferMgr.upload();
+        }
+
+        // todo
         for (var i: number = 0, n: number = list.length; i < n; i++) {
             elements[i]._render(this);//render
         }
@@ -198,8 +218,17 @@ export class WebGLRenderContext3D implements IRenderContext3D {
             this._start();
             this._needStart = false;
         }
-
+        let engine = WebGLEngine.instance;
+        let bufferMgr = engine.bufferMgr;
+        if (bufferMgr) {
+            bufferMgr.startFrame();
+        }
         node._preUpdatePre(this);
+
+        if (bufferMgr) {
+            bufferMgr.upload();
+        }
+
         node._render(this);
         return 0;
     }

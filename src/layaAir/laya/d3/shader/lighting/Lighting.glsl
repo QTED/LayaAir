@@ -140,7 +140,7 @@ uniform int u_SpotLightMode;
 uniform sampler2D u_LightBuffer;
 
 	    #ifdef DIRECTIONLIGHT
-uniform mediump int u_DirationLightCount;
+// uniform mediump int u_DirationLightCount;
 	    #endif
 
 	    #if defined(POINTLIGHT) || defined(SPOTLIGHT)

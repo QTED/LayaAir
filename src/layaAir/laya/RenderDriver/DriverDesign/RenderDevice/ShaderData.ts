@@ -69,11 +69,6 @@ export class ShaderData implements IClone {
         this._ownerResource = ownerResource;
     }
 
-    _releaseUBOData() {
-        throw new Error("Method not implemented.");
-    }
-
-
     getDefineData(): IDefineDatas {
         throw new Error("Method not implemented.");
     }
@@ -117,6 +112,13 @@ export class ShaderData implements IClone {
      * 清空宏定义。
      */
     clearDefine(): void {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * 清空数据
+     */
+    clearData(): void {
         throw new Error("Method not implemented.");
     }
 

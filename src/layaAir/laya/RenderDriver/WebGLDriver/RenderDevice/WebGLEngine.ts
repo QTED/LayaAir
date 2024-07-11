@@ -6,7 +6,6 @@ import { RenderCapable } from "../../../RenderEngine/RenderEnum/RenderCapable";
 import { RenderClearFlag } from "../../../RenderEngine/RenderEnum/RenderClearFlag";
 import { RenderParams } from "../../../RenderEngine/RenderEnum/RenderParams";
 import { GPUEngineStatisticsInfo } from "../../../RenderEngine/RenderEnum/RenderStatInfo";
-import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { ShaderVariable } from "../../../RenderEngine/RenderShader/ShaderVariable";
 import { CommandEncoder } from "../../../layagl/CommandEncoder";
 import { Color } from "../../../maths/Color";
@@ -31,6 +30,7 @@ import { GLVertexState } from "./WebGLEngine/GLVertexState";
 import { GlCapable } from "./WebGLEngine/GlCapable";
 import { WebGLConfig } from "./WebGLEngine/WebGLConfig";
 import { WebGLInternalTex } from "./WebGLInternalTex";
+import { WebGLBufferManager } from "./WebGLBufferManager";
 import { EventDispatcher } from "../../../events/EventDispatcher";
 import { WebGLInternalRT } from "./WebGLInternalRT";
 import { RenderTargetFormat } from "../../../RenderEngine/RenderEnum/RenderTargetFormat";
@@ -109,11 +109,6 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
     //key BufferTargetType
     private _GLBufferBindMap: { [key: number]: GLBuffer | null };
 
-    private _curUBOPointer: number = 0;
-    //记录绑定UBO的glPointer
-    private _GLUBOPointerMap: Map<string, number> = new Map();
-    //记录绑定Pointer的UBO
-    private _GLBindPointerUBOMap: Map<number, GLBuffer> = new Map();
     //bind viewport
     private _lastViewport: Vector4;
     private _lastScissor: Vector4;
@@ -154,6 +149,9 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
     // //TODO:管理FrameBuffer
     // private _RenderBufferResource: any;
 
+    /**@internal */
+    bufferMgr: WebGLBufferManager;
+
     //GPU统计数据
     private _GLStatisticsInfo: Map<GPUEngineStatisticsInfo, number> = new Map();
     static instance: WebGLEngine;
@@ -168,12 +166,6 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
         this._webglMode = webglMode;
         this._initStatisticsInfo();
         WebGLEngine.instance = this;
-
-        if (Config3D._uniformBlock) {
-            // todo
-            // let configShaderValue = Shader3D._configDefineValues;
-            // configShaderValue.add(Shader3D.SHADERDEFINE_ENUNIFORMBLOCK);
-        }
     }
 
     endFrame(): void {
@@ -265,24 +257,6 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
     }
 
     /**
-     * @internal
-     * @param glPointer 
-     * @returns 
-     */
-    _getBindUBOBuffer(glPointer: number): GLBuffer {
-        return this._GLBindPointerUBOMap.get(glPointer);
-    }
-
-    /**
-     * @internal
-     * @param glPointer 
-     * @param buffer 
-     */
-    _setBindUBOBuffer(glPointer: number, buffer: GLBuffer): void {
-        this._GLBindPointerUBOMap.set(glPointer, buffer);
-    }
-
-    /**
      * create GL
      * @param canvas 
      */
@@ -327,6 +301,8 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
         this._GLTextureContext = this.isWebGL2 ? new GL2TextureContext(this) : new GLTextureContext(this);
         this._GLRenderDrawContext = new GLRenderDrawContext(this);
         canvas.addEventListener("webglcontextlost", this.webglContextLost)
+
+        this._initBufferBlock(this);
     }
 
     webglContextLost(e: any) {
@@ -342,6 +318,15 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
         this._GLBufferBindMap[BufferTargetType.UNIFORM_BUFFER] = null;
     }
 
+    private _initBufferBlock(engine: WebGLEngine) {
+        const useUBO = Config3D.enableUniformBufferObject && this.getCapable(RenderCapable.UnifromBufferObject);
+        if (useUBO) {
+            let gl = <WebGL2RenderingContext>this._context;
+            let offsetAlignment = gl.getParameter(gl.UNIFORM_BUFFER_OFFSET_ALIGNMENT);
+
+            this.bufferMgr = new WebGLBufferManager(this, offsetAlignment);
+        }
+    }
 
     _getbindBuffer(target: BufferTargetType) {
         return this._GLBufferBindMap[target];
@@ -458,14 +443,6 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
     createVertexState(): GLVertexState {
         return new GLVertexState(this);
     }
-
-    getUBOPointer(name: string): number {
-        if (!this._GLUBOPointerMap.has(name))
-            this._GLUBOPointerMap.set(name, this._curUBOPointer++);
-        return this._GLUBOPointerMap.get(name);
-    }
-
-
 
     getTextureContext(): ITextureContext {
         return this._GLTextureContext;
