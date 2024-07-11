@@ -5,6 +5,7 @@ import { Vector2 } from "../../../maths/Vector2";
 import { Vector3 } from "../../../maths/Vector3";
 import { Vector4 } from "../../../maths/Vector4";
 import { BufferTargetType, BufferUsage } from "../../../RenderEngine/RenderEnum/BufferTargetType";
+import { IClone } from "../../../utils/IClone";
 import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
 import { GLBuffer } from "./WebGLEngine/GLBuffer";
 
@@ -23,7 +24,7 @@ type Uniform = {
 /**
  * 
  */
-export class WebGLUniformBuffer {
+export class WebGLUniformBuffer implements IClone {
 
     _byteLength: number = 0;
 
@@ -317,6 +318,29 @@ export class WebGLUniformBuffer {
         }
     }
 
+    clone(): WebGLUniformBuffer {
+        let buffer = new WebGLUniformBuffer(this.name);
+        this.cloneTo(buffer);
+        return buffer;
+    }
+    cloneTo(dest: WebGLUniformBuffer): void {
+        dest._maxAlignment = this._maxAlignment;
+        dest._byteLength = this._byteLength;
+        dest._currentLength = this._currentLength;
+        this.uniforms.forEach((uniform, key) => {
+            let view: Float32Array;
+            let destUniform = {
+                index: uniform.index,
+                size: uniform.size,
+                offset: uniform.offset,
+                dataView: uniform.dataView,
+                view: view
+            }
+            dest.uniforms.set(key, destUniform);
+        });
+        dest.create();
+        dest._data.set(this._data);
+    }
 
     destroy() {
         this.uniforms.clear();

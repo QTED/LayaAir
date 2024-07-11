@@ -133,7 +133,12 @@ export class WebGLShaderData extends ShaderData {
 	}
 
 	clearData(): void {
-		this._data = {};
+		for (const key in this._data) {
+			// remove resource reference
+			if (this._data[key] instanceof Resource) {
+				this._data[key]._removeReference();
+			}
+		}
 		this.uniformBuffersPropertyMap.clear();
 
 		this.uniformBuffers.forEach((buffer) => {
@@ -482,25 +487,29 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	cloneTo(destObject: WebGLShaderData): void {
 		var dest: WebGLShaderData = <WebGLShaderData>destObject;
-		var destData: { [key: string]: number | boolean | Vector2 | Vector3 | Vector4 | Matrix3x3 | Matrix4x4 | BaseTexture } = dest._data;
+		var destData: { [key: string]: number | boolean | Vector2 | Vector3 | Vector4 | Matrix3x3 | Matrix4x4 | BaseTexture | WebGLUniformBuffer } = dest._data;
+
+		destObject.clearData();
 		for (var k in this._data) {//TODO:需要优化,杜绝is判断，慢
 			var value: any = this._data[k];
 			if (value != null) {
 				if (typeof value == "number") {
 					destData[k] = value;
-				} else if (typeof value == "number") {
+				}
+				else if (typeof value == "boolean") {
 					destData[k] = value;
-				} else if (typeof value == "boolean") {
-					destData[k] = value;
-				} else if (value instanceof Vector2) {
+				}
+				else if (value instanceof Vector2) {
 					var v2 = destData[k] || (destData[k] = new Vector2());
 					(<Vector2>value).cloneTo(v2);
 					destData[k] = v2;
-				} else if (value instanceof Vector3) {
+				}
+				else if (value instanceof Vector3) {
 					var v3 = destData[k] || (destData[k] = new Vector3());
 					(<Vector3>value).cloneTo(v3);
 					destData[k] = v3;
-				} else if (value instanceof Vector4) {
+				}
+				else if (value instanceof Vector4) {
 					let color = this.getColor(parseInt(k));
 					if (color) {
 						let clonecolor = color.clone();
@@ -520,10 +529,12 @@ export class WebGLShaderData extends ShaderData {
 					var mat = destData[k] || (destData[k] = new Matrix4x4());
 					(<Matrix4x4>value).cloneTo(mat);
 					destData[k] = mat;
-				} else if (value instanceof BaseTexture) {
+				}
+				else if (value instanceof BaseTexture) {
 					destData[k] = value;
 					value._addReference();
-				} else if (value instanceof Resource) {
+				}
+				else if (value instanceof Resource) {
 					destData[k] = value as any;
 					value._addReference();
 				}
@@ -533,6 +544,17 @@ export class WebGLShaderData extends ShaderData {
 		this._gammaColorMap.forEach((color, index) => {
 			destObject._gammaColorMap.set(index, color.clone());
 		});
+
+		this.uniformBuffers.forEach((buffer, key) => {
+			let destBuffer = buffer.clone();
+			dest.uniformBuffers.set(key, destBuffer);
+			destBuffer.uniforms.forEach((uniform, key) => {
+				dest.uniformBuffersPropertyMap.set(key, destBuffer);
+			});
+			let bufferId = Shader3D.propertyNameToID(key);
+			destData[bufferId] = destBuffer;
+		});
+
 	}
 
 	getDefineData(): WebDefineDatas {
