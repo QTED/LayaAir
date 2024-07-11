@@ -102,11 +102,6 @@ export class WebGLEngine implements IRenderEngine {
     //key BufferTargetType
     private _GLBufferBindMap: { [key: number]: GLBuffer | null };
 
-    private _curUBOPointer: number = 0;
-    //记录绑定UBO的glPointer
-    private _GLUBOPointerMap: Map<string, number> = new Map();
-    //记录绑定Pointer的UBO
-    private _GLBindPointerUBOMap: Map<number, GLBuffer> = new Map();
     //bind viewport
     private _lastViewport: Vector4;
     private _lastScissor: Vector4;
@@ -157,12 +152,6 @@ export class WebGLEngine implements IRenderEngine {
         this._webglMode = webglMode;
         this._initStatisticsInfo();
         WebGLEngine.instance = this;
-
-        if (Config3D._uniformBlock) {
-            // todo
-            // let configShaderValue = Shader3D._configDefineValues;
-            // configShaderValue.add(Shader3D.SHADERDEFINE_ENUNIFORMBLOCK);
-        }
     }
 
     resizeOffScreen(width: number, height: number): void {
@@ -223,24 +212,6 @@ export class WebGLEngine implements IRenderEngine {
      */
     getStatisticsInfo(info: GPUEngineStatisticsInfo): number {
         return this._GLStatisticsInfo.get(info);
-    }
-
-    /**
-     * @internal
-     * @param glPointer 
-     * @returns 
-     */
-    _getBindUBOBuffer(glPointer: number): GLBuffer {
-        return this._GLBindPointerUBOMap.get(glPointer);
-    }
-
-    /**
-     * @internal
-     * @param glPointer 
-     * @param buffer 
-     */
-    _setBindUBOBuffer(glPointer: number, buffer: GLBuffer): void {
-        this._GLBindPointerUBOMap.set(glPointer, buffer);
     }
 
     /**
@@ -419,14 +390,6 @@ export class WebGLEngine implements IRenderEngine {
     createVertexState(): GLVertexState {
         return new GLVertexState(this);
     }
-
-    getUBOPointer(name: string): number {
-        if (!this._GLUBOPointerMap.has(name))
-            this._GLUBOPointerMap.set(name, this._curUBOPointer++);
-        return this._GLUBOPointerMap.get(name);
-    }
-
-
 
     getTextureContext(): ITextureContext {
         return this._GLTextureContext;

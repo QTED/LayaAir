@@ -1,4 +1,6 @@
 
+import { Config3D } from "../../../../Config3D";
+import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { ShaderPass } from "../../../RenderEngine/RenderShader/ShaderPass";
 import { SubShader } from "../../../RenderEngine/RenderShader/SubShader";
 import { Transform3D } from "../../../d3/core/Transform3D";
@@ -10,6 +12,7 @@ import { WebGLShaderData } from "../../RenderModuleData/WebModuleData/WebGLShade
 import { WebGLEngine } from "../RenderDevice/WebGLEngine";
 import { WebGLRenderGeometryElement } from "../RenderDevice/WebGLRenderGeometryElement";
 import { WebGLShaderInstance } from "../RenderDevice/WebGLShaderInstance";
+import { WebGLUniformBuffer } from "../RenderDevice/WebGLUniformBuffer";
 import { WebGLRenderContext3D } from "./WebGLRenderContext3D";
 
 export class WebGLRenderElement3D implements IRenderElement3D {
@@ -120,6 +123,54 @@ export class WebGLRenderElement3D implements IRenderElement3D {
     protected _compileShader(context: WebGLRenderContext3D) {
         var passes: ShaderPass[] = this.subShader._passes;
         this._clearShaderInstance();
+
+        // let sceneData = context.sceneData;
+        // sceneData.createUniformBuffer("Scene3D");
+
+        // let cameraData = context.cameraData;
+        // cameraData.createUniformBuffer("BaseCamera");
+
+        // todo
+        if (this.renderShaderData) {
+            let uniformMaps = this.owner._commonUniformMap;
+            uniformMaps.forEach(value => {
+                this.renderShaderData.createUniformBuffer(value);
+            });
+        }
+
+        // todo
+        // material
+        let materialData = this.materialShaderData;
+        let subShader = this.subShader;
+        {
+            let shader = subShader._owner;
+            let shaderName = shader.name;
+            // todo 
+            // to subshader has different uniform map
+            if (Config3D._uniformBlock && !materialData.uniformBuffers.has("Material")) {
+                let buffer = new WebGLUniformBuffer("Material");
+                materialData.uniformBuffers.set("Material", buffer);
+                subShader._uniformTypeMap.forEach((value, key) => {
+                    let index = Shader3D.propertyNameToID(key);
+                    buffer.addUniform(index, value);
+                    materialData.uniformBuffersPropertyMap.set(index, buffer);
+                });
+
+                buffer.create();
+
+                subShader._uniformTypeMap.forEach((value, key) => {
+                    let index = Shader3D.propertyNameToID(key);
+                    let data = materialData._data[index];
+                    if (data) {
+                        buffer.setUniformData(index, value, data);
+                    }
+                });
+
+                let id = Shader3D.propertyNameToID("Material");
+                materialData._data[id] = buffer;
+            }
+        }
+
         for (var j: number = 0, m: number = passes.length; j < m; j++) {
             var pass: ShaderPass = passes[j];
             //NOTE:this will cause maybe a shader not render but do prepare before，but the developer can avoide this manual,for example shaderCaster=false.

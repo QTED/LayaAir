@@ -181,6 +181,7 @@ export class Scene3D extends Sprite {
         Scene3D.CLUSTERBUFFER = Shader3D.propertyNameToID("u_LightClusterBuffer");
         Scene3D.TIME = Shader3D.propertyNameToID("u_Time");
         Scene3D.GIRotate = Shader3D.propertyNameToID("u_GIRotate");
+
         let sceneUniformMap: CommandUniformMap = Scene3D.sceneUniformMap = LayaGL.renderDeviceFactory.createGlobalUniformMap("Scene3D");
 
         sceneUniformMap.addShaderUniform(Scene3D.FOGCOLOR, "u_FogColor", ShaderDataType.Color);
@@ -246,9 +247,13 @@ export class Scene3D extends Sprite {
         var configShaderValue = Shader3D._configDefineValues;
         if (!Config3D._multiLighting) {
             (configShaderValue.add(Shader3D.SHADERDEFINE_LEGACYSINGALLIGHTING));
-            Scene3D.legacyLightingValueInit()
+            Scene3D.legacyLightingValueInit();
         }
         Scene3D._shadowCasterPass = new ShadowCasterPass();
+
+        if (Config3D._uniformBlock) {
+            configShaderValue.add(Shader3D.SHADERDEFINE_ENUNIFORMBLOCK);
+        }
 
         let supportFloatTex = LayaGL.renderEngine.getCapable(RenderCapable.TextureFormat_R32G32B32A32);
         if (supportFloatTex) {
@@ -287,8 +292,6 @@ export class Scene3D extends Sprite {
     _reflectionsResolution: string = "256";
     /**@internal ide配置文件使用 */
     _reflectionsIblSamples = 128;
-
-
 
     /** @internal */
     private _group: string;

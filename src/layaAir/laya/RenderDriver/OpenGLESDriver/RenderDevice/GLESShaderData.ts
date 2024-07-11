@@ -39,11 +39,6 @@ export class GLESShaderData extends ShaderData {
     //     throw new Error("Method not implemented.");//TODO
     // }
 
-    _releaseUBOData() {
-        //throw new Error("Method not implemented.");//TODO
-        //TODO GLES Temply dont surpport UBO
-    }
-
     getDefineData(): RTDefineDatas {
         return this._defineDatas;
     }
@@ -88,6 +83,10 @@ export class GLESShaderData extends ShaderData {
      */
     clearDefine(): void {
         this._defineDatas.clear();
+    }
+
+    clearData(): void {
+        // todo
     }
 
     /**

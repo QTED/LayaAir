@@ -42,12 +42,4 @@ export class WebGPUCommandUniformMap extends CommandUniformMap {
         this._idata[propertyID] = { uniformtype, propertyName, arrayLength };
     }
 
-    /**
-     * 增加一个Uniform
-     * @param propertyID 
-     * @param propertyKey 
-     */
-    addShaderBlockUniform(propertyID: number, blockname: string, blockProperty: UniformProperty[]): void {
-        return null;
-    }
 }

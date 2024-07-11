@@ -11,15 +11,15 @@
 
 	#ifndef DEPTHPASS
 	    #ifdef ENUNIFORMBLOCK
-uniform ShadowUniformBlock
-{
-    vec4 u_ShadowBias; // x: depth bias, y: normal bias
-    vec3 u_ShadowLightDirection;
-};
+// uniform ShadowUniformBlock
+// {
+//     vec4 u_ShadowBias; // x: depth bias, y: normal bias
+//     vec3 u_ShadowLightDirection;
+// };
 	    #else // ENUNIFORMBLOCK
-uniform vec4 u_ShadowBias; // x: depth bias, y: normal bias
+// uniform vec4 u_ShadowBias; // x: depth bias, y: normal bias
 		#ifdef SHADOW
-uniform vec3 u_ShadowLightDirection;
+// uniform vec3 u_ShadowLightDirection;
 		#endif // SHADOW
 	    #endif // ENUNIFORMBLOCK
 

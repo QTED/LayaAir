@@ -530,6 +530,10 @@ export class Material extends Resource implements IClone {
             this._shader = Shader3D.find("BLINNPHONG");
         }
 
+        // clear data
+        this.shaderData.clearDefine();
+        this.shaderData.clearData();
+
         // set default value
         // todo subShader 选择
         let subShader = this._shader.getSubShaderAt(0);
@@ -565,7 +569,6 @@ export class Material extends Resource implements IClone {
     getBoolByIndex(uniformIndex: number): boolean {
         return this.shaderData.getBool(uniformIndex);
     }
-
 
     /**
      * 通过索引设置bool值

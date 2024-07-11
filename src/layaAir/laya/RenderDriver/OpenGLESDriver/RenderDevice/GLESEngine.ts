@@ -40,9 +40,6 @@ export class GLESEngine implements IRenderEngine {
     _lodTextureSample: boolean = true;
     _breakTextureSample: boolean = true;
 
-    getUBOPointer?(name: string): number {
-        throw new Error("Method not implemented.");
-    }
     createBuffer?(targetType: BufferTargetType, bufferUsageType: BufferUsage): GLBuffer {
         throw new Error("Method not implemented.");
     }

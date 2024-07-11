@@ -11,7 +11,7 @@ export class ShaderProcessInfo {
     vs: ShaderNode;
     ps: ShaderNode;
     attributeMap: { [name: string]: [number, ShaderDataType] };
-    uniformMap: UniformMapType;
+    uniformMap: Map<string, ShaderDataType>;
     is2D: boolean;
     //....其他数据
 };
@@ -45,7 +45,7 @@ export class ShaderCompileDefineBase {
             this._validDefine.add(Shader3D.getDefineByName(k));
     }
 
-   
+
     /**
      * @internal
      */

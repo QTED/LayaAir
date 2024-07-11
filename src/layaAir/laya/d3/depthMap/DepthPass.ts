@@ -1,6 +1,8 @@
+import { ShaderDataType } from "../../RenderDriver/DriverDesign/RenderDevice/ShaderData";
 import { ShaderDefine } from "../../RenderDriver/RenderModuleData/Design/ShaderDefine";
 import { RenderTargetFormat } from "../../RenderEngine/RenderEnum/RenderTargetFormat";
 import { Shader3D } from "../../RenderEngine/RenderShader/Shader3D";
+import { LayaGL } from "../../layagl/LayaGL";
 import { Vector4 } from "../../maths/Vector4";
 import { Viewport } from "../../maths/Viewport";
 import { DepthTextureMode, RenderTexture } from "../../resource/RenderTexture";
