@@ -11,6 +11,7 @@ import { Texture2D } from "../../../../resource/Texture2D";
 import { TextureCube } from "../../../../resource/TextureCube";
 import { ShaderDataType } from "../../../DriverDesign/RenderDevice/ShaderData";
 import { WebGLEngine } from "../WebGLEngine";
+import { WebGLUniformBuffer } from "../WebGLUniformBuffer";
 import { GLObject } from "./GLObject";
 
 
@@ -112,14 +113,20 @@ export class GLShaderInstance extends GLObject {
             var nUniformBlock: number = gl.getProgramParameter(this._program, (gl as WebGL2RenderingContext).ACTIVE_UNIFORM_BLOCKS);
             for (i = 0; i < nUniformBlock; i++) {
                 let gl2 = (gl as WebGL2RenderingContext);
+
                 var uniformBlockName: string = gl2.getActiveUniformBlockName(this._program, i);
+
                 one = new ShaderVariable();
                 one.name = uniformBlockName;
                 one.isArray = false;
                 one.type = (gl as WebGL2RenderingContext).UNIFORM_BUFFER;
                 one.dataOffset = this._engine.propertyNameToID(uniformBlockName);
+
                 let location = one.location = gl2.getUniformBlockIndex(this._program, uniformBlockName);
-                gl2.uniformBlockBinding(this._program, location, this._engine.getUBOPointer(uniformBlockName));
+
+                let bindingPoint = i;
+                gl2.uniformBlockBinding(this._program, location, bindingPoint);
+
                 this._uniformObjectMap[one.name] = one;
                 this._uniformMap.push(one);
                 this._addShaderUnifiormFun(one);
@@ -213,7 +220,7 @@ export class GLShaderInstance extends GLObject {
                 one.fun = this._uniform_samplerCube;
                 break;
             case (gl as WebGL2RenderingContext).UNIFORM_BUFFER:
-                // one.fun = this._uniform_UniformBuffer;
+                one.fun = this._uniform_UniformBuffer;
                 break;
             default:
                 throw new Error("compile shader err!");
@@ -497,6 +504,17 @@ export class GLShaderInstance extends GLObject {
         var gl: WebGLRenderingContext = this._gl;
         this._bindTexture(one.textureID, gl.TEXTURE_CUBE_MAP, value);
         return 0;
+    }
+
+    /**
+     * @internal
+     */
+    _uniform_UniformBuffer(one: ShaderVariable, value: WebGLUniformBuffer) {
+        let gl = <WebGL2RenderingContext>this._gl;
+        if (value.needUnload) {
+            value.upload();
+        }
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, one.location, value._buffer._glBuffer);
     }
 
     /**

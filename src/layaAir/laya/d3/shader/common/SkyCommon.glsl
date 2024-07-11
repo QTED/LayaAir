@@ -1,11 +1,21 @@
 #if !defined(SkyCommon_lib)
     #define SkyCommon_lib
 
-uniform vec3 u_SunLight_direction;
-uniform vec4 u_SunLight_color;
-uniform mat4 u_SkyViewMat;
-uniform mat4 u_SkyProjectionMat;
-uniform mat4 u_SkyProjectionViewMat;
+#ifdef ENUNIFORMBLOCK
+    uniform SkyRenderer {
+        vec3 u_SunLight_direction;
+        vec4 u_SunLight_color;
+        mat4 u_SkyViewMat;
+        mat4 u_SkyProjectionMat;
+        mat4 u_SkyProjectionViewMat;
+    };
+#else // ENUNIFORMBLOCK
+    uniform vec3 u_SunLight_direction;
+    uniform vec4 u_SunLight_color;
+    uniform mat4 u_SkyViewMat;
+    uniform mat4 u_SkyProjectionMat;
+    uniform mat4 u_SkyProjectionViewMat;
+#endif // ENUNIFORMBLOCK
 
 vec4 remapSkyPositionZ(in vec4 position)
 {

@@ -46,7 +46,6 @@ export interface IRenderEngine {
     clearStatisticsInfo(): void;
     /**@internal */
     getStatisticsInfo(info: GPUEngineStatisticsInfo): number;
-    getUBOPointer?(name: string): number;   // TODO
     createBuffer?(targetType: BufferTargetType, bufferUsageType: BufferUsage): GLBuffer;    // TODO
 
     endFrame(): void;

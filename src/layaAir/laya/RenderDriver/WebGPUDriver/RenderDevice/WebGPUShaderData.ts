@@ -508,6 +508,10 @@ export class WebGPUShaderData extends ShaderData {
                 this.coShaderData[i].clearDefine();
     }
 
+    clearData(): void {
+        // todo
+    }
+
     /**
      * 获取布尔
      * @param index shader索引
@@ -903,8 +907,6 @@ export class WebGPUShaderData extends ShaderData {
         this.cloneTo(dest);
         return dest;
     }
-
-    _releaseUBOData() { }
 
     /**
      * 清理

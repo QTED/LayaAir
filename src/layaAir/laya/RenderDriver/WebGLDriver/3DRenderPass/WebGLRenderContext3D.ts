@@ -57,8 +57,10 @@ export class WebGLRenderContext3D implements IRenderContext3D {
 
     set sceneData(value: WebGLShaderData) {
         this._sceneData = value;
+        if (value) {
+            value.createUniformBuffer("Scene3D");
+        }
     }
-
 
     get cameraData(): WebGLShaderData {
         return this._cameraData;
@@ -66,6 +68,9 @@ export class WebGLRenderContext3D implements IRenderContext3D {
 
     set cameraData(value: WebGLShaderData) {
         this._cameraData = value;
+        if (value) {
+            value.createUniformBuffer("BaseCamera");
+        }
     }
 
     get sceneModuleData(): WebSceneNodeData {
@@ -146,8 +151,6 @@ export class WebGLRenderContext3D implements IRenderContext3D {
     set invertY(value: boolean) {
         this._invertY = value;
     }
-
-
 
     /**
      * <code>GLESRenderContext3D<code/>

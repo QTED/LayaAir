@@ -1,27 +1,25 @@
-import { CommandUniformMap, UniformProperty } from "../../DriverDesign/RenderDevice/CommandUniformMap";
+import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
+import { CommandUniformMap } from "../../DriverDesign/RenderDevice/CommandUniformMap";
 import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
-
 export class WebGLCommandUniformMap extends CommandUniformMap {
 
-    /**@internal */
-    _idata: {
-        [key: number]: {
-            block: string,
-            propertyName: string,
-            arrayLength: number, //兼容WGSL
-            uniformtype: ShaderDataType,
-            blockProperty: UniformProperty[]//block property,if not in block  lenth = 0
-        }
-    } = {};
+    _idata: Map<number, {
+        propertyName: string,
+        arrayLength: number, //兼容WGSL
+        uniformtype: ShaderDataType,
+    }> = new Map();
+
     _stateName: string;
+    _stateID: number = 0;
 
     constructor(stateName: string) {
         super(stateName);
         this._stateName = stateName;
+        this._stateID = Shader3D.propertyNameToID(stateName);
     }
 
     hasPtrID(propertyID: number): boolean {
-        return !!(this._idata[propertyID] != null);
+        return this._stateID == propertyID || this._idata.has(propertyID);
     }
 
     /**
@@ -30,8 +28,8 @@ export class WebGLCommandUniformMap extends CommandUniformMap {
      * @param propertyID 
      * @param propertyKey 
      */
-    addShaderUniform(propertyID: number, propertyKey: string, uniformtype: ShaderDataType, block: string = ""): void {
-        this._idata[propertyID] = { uniformtype: uniformtype, propertyName: propertyKey, arrayLength: 0, block: block, blockProperty: null };
+    addShaderUniform(propertyID: number, propertyKey: string, uniformtype: ShaderDataType): void {
+        this._idata.set(propertyID, { uniformtype: uniformtype, propertyName: propertyKey, arrayLength: 0 });
     }
 
     /**
@@ -40,21 +38,10 @@ export class WebGLCommandUniformMap extends CommandUniformMap {
      * @param propertyID 
      * @param propertyName 
      */
-    addShaderUniformArray(propertyID: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number, block: string = ""): void {
+    addShaderUniformArray(propertyID: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number): void {
         if (uniformtype !== ShaderDataType.Matrix4x4 && uniformtype !== ShaderDataType.Vector4)
             throw ('because of align rule, the engine does not support other types as arrays.');
-        this._idata[propertyID] = { uniformtype, propertyName, arrayLength, block, blockProperty: null };
+        this._idata.set(propertyID, { uniformtype, propertyName, arrayLength });
     } //兼容WGSL
 
-    /**
-     * 增加一个Uniform
-     * @param propertyID 
-     * @param propertyKey 
-     */
-    addShaderBlockUniform(propertyID: number, blockname: string, blockProperty: UniformProperty[]): void {
-        this._idata[propertyID] = { propertyName: blockname, arrayLength: 0, blockProperty: blockProperty, uniformtype: ShaderDataType.None, block: "" };
-        blockProperty.forEach(element => {
-            this.addShaderUniform(element.id, element.propertyName, element.uniformtype, blockname);
-        });
-    }
 }

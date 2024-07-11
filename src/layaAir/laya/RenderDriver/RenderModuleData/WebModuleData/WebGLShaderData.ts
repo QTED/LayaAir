@@ -1,14 +1,19 @@
+import { Config3D } from "../../../../Config3D";
+import { LayaGL } from "../../../layagl/LayaGL";
 import { Color } from "../../../maths/Color";
 import { Matrix3x3 } from "../../../maths/Matrix3x3";
 import { Matrix4x4 } from "../../../maths/Matrix4x4";
 import { Vector2 } from "../../../maths/Vector2";
 import { Vector3 } from "../../../maths/Vector3";
 import { Vector4 } from "../../../maths/Vector4";
+import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { BaseTexture } from "../../../resource/BaseTexture";
 import { Resource } from "../../../resource/Resource";
 import { InternalTexture } from "../../DriverDesign/RenderDevice/InternalTexture";
 import { ShaderData } from "../../DriverDesign/RenderDevice/ShaderData";
+import { WebGLCommandUniformMap } from "../../WebGLDriver/RenderDevice/WebGLCommandUniformMap";
 import { WebGLEngine } from "../../WebGLDriver/RenderDevice/WebGLEngine";
+import { WebGLUniformBuffer } from "../../WebGLDriver/RenderDevice/WebGLUniformBuffer";
 import { ShaderDefine } from "../Design/ShaderDefine";
 import { WebDefineDatas } from "./WebDefineDatas";
 
@@ -28,6 +33,11 @@ export class WebGLShaderData extends ShaderData {
 	/** @internal */
 	_defineDatas: WebDefineDatas = new WebDefineDatas();
 
+	/** @internal */
+	uniformBuffers: Map<string, WebGLUniformBuffer>;
+
+	/** @internal */
+	uniformBuffersPropertyMap: Map<number, WebGLUniformBuffer>;
 
 	/**
 	 * @internal	
@@ -36,13 +46,47 @@ export class WebGLShaderData extends ShaderData {
 		super(ownerResource);
 		this._initData();
 	}
-
 	/**
 	 * @internal
 	 */
 	_initData(): void {
 		this._data = {};
 		this._gammaColorMap = new Map();
+		this.uniformBuffers = new Map();
+		this.uniformBuffersPropertyMap = new Map();
+	}
+
+	createUniformBuffer(name: string): void {
+
+		if (!Config3D._uniformBlock || this.uniformBuffers.has(name)) {
+			return;
+		}
+
+		let uniformMap = <WebGLCommandUniformMap>LayaGL.renderDeviceFactory.createGlobalUniformMap(name);
+
+		let buffer = new WebGLUniformBuffer(name);
+		this.uniformBuffers.set(name, buffer);
+
+		let mapData = uniformMap._idata;
+		mapData.forEach((element, key) => {
+			buffer.addUniform(key, element.uniformtype, element.arrayLength);
+			this.uniformBuffersPropertyMap.set(key, buffer);
+		});
+
+		buffer.create();
+
+		// update shader data to uniform buffer
+		mapData.forEach((element, key) => {
+			let data = this._data[key];
+			if (data) {
+				buffer.setUniformData(key, element.uniformtype, data);
+			}
+		});
+
+		let id = Shader3D.propertyNameToID(name);
+		this._data[id] = buffer;
+
+		return;
 	}
 
 	/**
@@ -88,6 +132,16 @@ export class WebGLShaderData extends ShaderData {
 		this._defineDatas.clear();
 	}
 
+	clearData(): void {
+		this._data = {};
+		this.uniformBuffersPropertyMap.clear();
+
+		this.uniformBuffers.forEach((buffer) => {
+			buffer.destroy();
+		});
+		this.uniformBuffers.clear();
+	}
+
 	/**
 	 * 获取布尔。
 	 * @param	index shader索引。
@@ -104,6 +158,12 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	setBool(index: number, value: boolean): void {
 		this._data[index] = value;
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			// todo
+			// ubo.setBool(index, value);
+		}
 	}
 
 	/**
@@ -122,6 +182,11 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	setInt(index: number, value: number): void {
 		this._data[index] = value;
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setInt(index, value);
+		}
 	}
 
 	/**
@@ -140,6 +205,11 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	setNumber(index: number, value: number): void {
 		this._data[index] = value;
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setFloat(index, value);
+		}
 	}
 
 	/**
@@ -161,6 +231,11 @@ export class WebGLShaderData extends ShaderData {
 			value.cloneTo(this._data[index]);
 		} else
 			this._data[index] = value.clone();
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setVector2(index, value);
+		}
 	}
 
 	/**
@@ -182,6 +257,11 @@ export class WebGLShaderData extends ShaderData {
 			value.cloneTo(this._data[index]);
 		} else
 			this._data[index] = value.clone();
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setVector3(index, value);
+		}
 	}
 
 	/**
@@ -203,6 +283,11 @@ export class WebGLShaderData extends ShaderData {
 			value.cloneTo(this._data[index]);
 		} else
 			this._data[index] = value.clone();
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setVector4(index, value);
+		}
 	}
 
 	/**
@@ -240,6 +325,11 @@ export class WebGLShaderData extends ShaderData {
 			this._data[index] = linearColor;
 			this._gammaColorMap.set(index, value.clone());
 		}
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setVector4(index, this._data[index]);
+		}
 	}
 
 	/**
@@ -270,6 +360,11 @@ export class WebGLShaderData extends ShaderData {
 		} else {
 			this._data[index] = value.clone();
 		}
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setMatrix4x4(index, value);
+		}
 	}
 
 	/**
@@ -293,6 +388,11 @@ export class WebGLShaderData extends ShaderData {
 		else {
 			this._data[index] = value.clone();
 		}
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setMatrix3x3(index, value);
+		}
 	}
 
 	/**
@@ -311,6 +411,11 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	setBuffer(index: number, value: Float32Array): void {
 		this._data[index] = value;
+
+		let ubo = this.uniformBuffersPropertyMap.get(index);
+		if (ubo) {
+			ubo.setBuffer(index, value);
+		}
 	}
 
 	/**
@@ -455,6 +560,13 @@ export class WebGLShaderData extends ShaderData {
 		this._data = {};
 		this._gammaColorMap.clear();
 		this._defineDatas.clear();
+
+		this.uniformBuffersPropertyMap.clear();
+
+		this.uniformBuffers.forEach((buffer) => {
+			buffer.destroy();
+		});
+		this.uniformBuffers.clear();
 	}
 
 	destroy(): void {
@@ -470,6 +582,13 @@ export class WebGLShaderData extends ShaderData {
 		this._data = null;
 		this._gammaColorMap.clear();
 		this._gammaColorMap = null;
+
+		this.uniformBuffersPropertyMap.clear();
+
+		this.uniformBuffers.forEach((buffer) => {
+			buffer.destroy();
+		});
+		this.uniformBuffers.clear();
 	}
 }
 
