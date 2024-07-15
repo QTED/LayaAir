@@ -4,9 +4,10 @@ import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
 export class WebGLCommandUniformMap extends CommandUniformMap {
 
     _idata: Map<number, {
+        id: number,
         propertyName: string,
-        arrayLength: number, //兼容WGSL
         uniformtype: ShaderDataType,
+        arrayLength: number,
     }> = new Map();
 
     _stateName: string;
@@ -29,7 +30,7 @@ export class WebGLCommandUniformMap extends CommandUniformMap {
      * @param propertyKey 
      */
     addShaderUniform(propertyID: number, propertyKey: string, uniformtype: ShaderDataType): void {
-        this._idata.set(propertyID, { uniformtype: uniformtype, propertyName: propertyKey, arrayLength: 0 });
+        this._idata.set(propertyID, { id: propertyID, uniformtype: uniformtype, propertyName: propertyKey, arrayLength: 0 });
     }
 
     /**
@@ -41,7 +42,7 @@ export class WebGLCommandUniformMap extends CommandUniformMap {
     addShaderUniformArray(propertyID: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number): void {
         if (uniformtype !== ShaderDataType.Matrix4x4 && uniformtype !== ShaderDataType.Vector4)
             throw ('because of align rule, the engine does not support other types as arrays.');
-        this._idata.set(propertyID, { uniformtype, propertyName, arrayLength });
+        this._idata.set(propertyID, { id: propertyID, uniformtype, propertyName, arrayLength });
     } //兼容WGSL
 
 }

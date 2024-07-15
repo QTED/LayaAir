@@ -111,6 +111,11 @@ export class GLBuffer extends GLObject {
         this.unbindBuffer();
     }
 
+    bindBufferBase(glPointer: number) {
+        const gl = <WebGL2RenderingContext>this._gl;
+        gl.bindBufferBase(this._glTarget, glPointer, this._glBuffer);
+    }
+
     bindBufferRange(glPointer: number, offset: number, byteCount: number) {
         const gl = <WebGL2RenderingContext>this._gl;
         gl.bindBufferRange(this._glTarget, glPointer, this._glBuffer, offset, byteCount);
