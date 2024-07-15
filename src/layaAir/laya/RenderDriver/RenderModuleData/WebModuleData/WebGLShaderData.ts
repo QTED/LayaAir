@@ -10,7 +10,7 @@ import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { BaseTexture } from "../../../resource/BaseTexture";
 import { Resource } from "../../../resource/Resource";
 import { InternalTexture } from "../../DriverDesign/RenderDevice/InternalTexture";
-import { ShaderData } from "../../DriverDesign/RenderDevice/ShaderData";
+import { ShaderData, ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
 import { WebGLCommandUniformMap } from "../../WebGLDriver/RenderDevice/WebGLCommandUniformMap";
 import { WebGLEngine } from "../../WebGLDriver/RenderDevice/WebGLEngine";
 import { WebGLUniformBuffer } from "../../WebGLDriver/RenderDevice/WebGLUniformBuffer";
@@ -56,30 +56,28 @@ export class WebGLShaderData extends ShaderData {
 		this.uniformBuffersPropertyMap = new Map();
 	}
 
-	createUniformBuffer(name: string): void {
-
+	createUniformBuffer(name: string, uniformMap: Map<number | string, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>): void {
 		if (!Config3D._uniformBlock || this.uniformBuffers.has(name)) {
 			return;
 		}
 
-		let uniformMap = <WebGLCommandUniformMap>LayaGL.renderDeviceFactory.createGlobalUniformMap(name);
-
 		let buffer = new WebGLUniformBuffer(name);
 		this.uniformBuffers.set(name, buffer);
 
-		let mapData = uniformMap._idata;
-		mapData.forEach((element, key) => {
-			buffer.addUniform(key, element.uniformtype, element.arrayLength);
-			this.uniformBuffersPropertyMap.set(key, buffer);
+		uniformMap.forEach((uniform, key) => {
+			let uniformId = uniform.id;
+			buffer.addUniform(uniformId, uniform.uniformtype, uniform.arrayLength);
+			this.uniformBuffersPropertyMap.set(uniformId, buffer);
 		});
 
 		buffer.create();
 
 		// update shader data to uniform buffer
-		mapData.forEach((element, key) => {
-			let data = this._data[key];
+		uniformMap.forEach((uniform, key) => {
+			let uniformId = uniform.id;
+			let data = this._data[uniformId];
 			if (data) {
-				buffer.setUniformData(key, element.uniformtype, data);
+				buffer.setUniformData(uniformId, uniform.uniformtype, data);
 			}
 		});
 

@@ -11,6 +11,7 @@ import { InternalRenderTarget } from "../../DriverDesign/RenderDevice/InternalRe
 import { WebCameraNodeData, WebSceneNodeData } from "../../RenderModuleData/WebModuleData/3D/WebModuleData";
 import { WebDefineDatas } from "../../RenderModuleData/WebModuleData/WebDefineDatas";
 import { WebGLShaderData } from "../../RenderModuleData/WebModuleData/WebGLShaderData";
+import { WebGLCommandUniformMap } from "../RenderDevice/WebGLCommandUniformMap";
 import { WebGLEngine } from "../RenderDevice/WebGLEngine";
 import { WebGLRenderElement3D } from "./WebGLRenderElement3D";
 
@@ -58,7 +59,9 @@ export class WebGLRenderContext3D implements IRenderContext3D {
     set sceneData(value: WebGLShaderData) {
         this._sceneData = value;
         if (value) {
-            value.createUniformBuffer("Scene3D");
+            // value.createUniformBuffer("Scene3D");
+            let sceneMap = <WebGLCommandUniformMap>LayaGL.renderDeviceFactory.createGlobalUniformMap("Scene3D");
+            value.createUniformBuffer("Scene3D", sceneMap._idata);
         }
     }
 
@@ -69,7 +72,9 @@ export class WebGLRenderContext3D implements IRenderContext3D {
     set cameraData(value: WebGLShaderData) {
         this._cameraData = value;
         if (value) {
-            value.createUniformBuffer("BaseCamera");
+            // value.createUniformBuffer("BaseCamera");
+            let camereMap = <WebGLCommandUniformMap>LayaGL.renderDeviceFactory.createGlobalUniformMap("BaseCamera");
+            value.createUniformBuffer("BaseCamera", camereMap._idata);
         }
     }
 

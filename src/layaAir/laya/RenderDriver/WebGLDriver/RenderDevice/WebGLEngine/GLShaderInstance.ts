@@ -514,7 +514,8 @@ export class GLShaderInstance extends GLObject {
         if (value.needUnload) {
             value.upload();
         }
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, one.location, value._buffer._glBuffer);
+        // gl.bindBufferBase(gl.UNIFORM_BUFFER, one.location, value._buffer._glBuffer);
+        value._buffer.bindBufferBase(one.location);
     }
 
     /**

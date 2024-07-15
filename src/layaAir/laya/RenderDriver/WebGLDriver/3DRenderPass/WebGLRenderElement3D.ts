@@ -4,11 +4,13 @@ import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { ShaderPass } from "../../../RenderEngine/RenderShader/ShaderPass";
 import { SubShader } from "../../../RenderEngine/RenderShader/SubShader";
 import { Transform3D } from "../../../d3/core/Transform3D";
+import { LayaGL } from "../../../layagl/LayaGL";
 import { FastSinglelist } from "../../../utils/SingletonList";
 import { IRenderElement3D } from "../../DriverDesign/3DRenderPass/I3DRenderPass";
 import { WebBaseRenderNode } from "../../RenderModuleData/WebModuleData/3D/WebBaseRenderNode";
 import { WebDefineDatas } from "../../RenderModuleData/WebModuleData/WebDefineDatas";
 import { WebGLShaderData } from "../../RenderModuleData/WebModuleData/WebGLShaderData";
+import { WebGLCommandUniformMap } from "../RenderDevice/WebGLCommandUniformMap";
 import { WebGLEngine } from "../RenderDevice/WebGLEngine";
 import { WebGLRenderGeometryElement } from "../RenderDevice/WebGLRenderGeometryElement";
 import { WebGLShaderInstance } from "../RenderDevice/WebGLShaderInstance";
@@ -134,7 +136,9 @@ export class WebGLRenderElement3D implements IRenderElement3D {
         if (this.renderShaderData) {
             let uniformMaps = this.owner._commonUniformMap;
             uniformMaps.forEach(value => {
-                this.renderShaderData.createUniformBuffer(value);
+                // this.renderShaderData.createUniformBuffer(value);
+                let uniformMap = <WebGLCommandUniformMap>LayaGL.renderDeviceFactory.createGlobalUniformMap(value);
+                this.renderShaderData.createUniformBuffer(value, uniformMap._idata);
             });
         }
 
@@ -147,31 +151,8 @@ export class WebGLRenderElement3D implements IRenderElement3D {
             let shaderName = shader.name;
             // todo 
             // to subshader has different uniform map
-            if (Config3D._uniformBlock && !materialData.uniformBuffers.has("Material")) {
-                let buffer = new WebGLUniformBuffer("Material");
-                materialData.uniformBuffers.set("Material", buffer);
-                subShader._uniformMap.forEach((value, key) => {
-                    let index = value.id;
-                    let type = value.uniformtype;
-                    let arrayLength = value.arrayLength;
-                    buffer.addUniform(index, type, arrayLength);
-                    materialData.uniformBuffersPropertyMap.set(index, buffer);
-                });
+            materialData.createUniformBuffer("Material", subShader._uniformMap);
 
-                buffer.create();
-
-                subShader._uniformMap.forEach((uniform, key) => {
-                    let index = uniform.id;
-                    let data = materialData._data[index];
-                    if (data) {
-                        let type = uniform.uniformtype;
-                        buffer.setUniformData(index, type, data);
-                    }
-                });
-
-                let id = Shader3D.propertyNameToID("Material");
-                materialData._data[id] = buffer;
-            }
         }
 
         for (var j: number = 0, m: number = passes.length; j < m; j++) {
