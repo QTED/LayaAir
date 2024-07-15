@@ -1,6 +1,11 @@
 import { ShaderDataType } from "./ShaderData";
 
-export type UniformProperty = { id: number, propertyName: string, uniformtype: ShaderDataType }
+export type UniformProperty = {
+    id: number,
+    propertyName: string,
+    uniformtype: ShaderDataType,
+    arrayLength: number,
+}
 export class CommandUniformMap {
 
     constructor(stateName: string) {

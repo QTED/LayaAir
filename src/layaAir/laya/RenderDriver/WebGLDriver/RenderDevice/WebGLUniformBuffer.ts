@@ -13,12 +13,17 @@ type DataViewType = Float32ArrayConstructor | Int32ArrayConstructor;
 
 type Uniform = {
     index: number,
-    size: number,
     offset: number,
     // todo 
     // other typed array
-    view: Float32Array | Int32Array,
     dataView: DataViewType
+    view: Float32Array | Int32Array,
+    /**
+     * element size (eg: vec2: 2, vec4: 4, mat4: 16)
+     */
+    size: number,
+    viewByteLength: number,
+    arrayLength: number
 }
 
 /**
@@ -76,21 +81,25 @@ export class WebGLUniformBuffer implements IClone {
      * @param size 
      * @param arraySize 
      */
-    protected addUniformData(uniformIndex: number, size: number, arraySize: number, baseAlignment: number, tsc: DataViewType) {
+    protected addUniformData(uniformIndex: number, size: number, arraySize: number, tsc: DataViewType) {
         if (arraySize > 0) {
-            // uniform 数组
-            // todo
+            let elementSize = size;
+
+            size = size <= 4 ? 4 : 16;
+
             this.alignmentPadding(size);
 
             size = size * arraySize;
 
             let view: Float32Array;
-            let uniform = {
+            let uniform: Uniform = {
                 index: uniformIndex,
                 view: view,
-                size: size,
+                size: elementSize,
                 offset: this._currentLength * 4,
-                dataView: tsc
+                dataView: tsc,
+                viewByteLength: tsc.BYTES_PER_ELEMENT * size,
+                arrayLength: arraySize
             }
             this.uniforms.set(uniformIndex, uniform);
 
@@ -102,12 +111,14 @@ export class WebGLUniformBuffer implements IClone {
             this.alignmentPadding(size);
 
             let view: Float32Array;
-            let uniform = {
+            let uniform: Uniform = {
                 index: uniformIndex,
                 view: view,
                 size: size,
                 offset: this._currentLength * 4,
-                dataView: tsc
+                dataView: tsc,
+                viewByteLength: tsc.BYTES_PER_ELEMENT * size,
+                arrayLength: 0
             }
             this.uniforms.set(uniformIndex, uniform);
 
@@ -129,7 +140,7 @@ export class WebGLUniformBuffer implements IClone {
         this.uniforms.forEach((uniform) => {
             // todo
             // other typed array
-            uniform.view = new uniform.dataView(buffer, uniform.offset, uniform.size);
+            uniform.view = new uniform.dataView(buffer, uniform.offset, uniform.viewByteLength / uniform.dataView.BYTES_PER_ELEMENT);
         });
 
         this._buffer = LayaGL.renderEngine.createBuffer(BufferTargetType.UNIFORM_BUFFER, BufferUsage.Dynamic);
@@ -154,27 +165,27 @@ export class WebGLUniformBuffer implements IClone {
         switch (type) {
             case ShaderDataType.Int:
             case ShaderDataType.Bool:
-                this.addUniformData(index, 1, arraySize, 4, Int32Array);
+                this.addUniformData(index, 1, arraySize, Int32Array);
                 break;
             case ShaderDataType.Float:
-                this.addUniformData(index, 1, arraySize, 4, Float32Array);
+                this.addUniformData(index, 1, arraySize, Float32Array);
                 break;
             case ShaderDataType.Vector2:
-                this.addUniformData(index, 2, arraySize, 8, Float32Array);
+                this.addUniformData(index, 2, arraySize, Float32Array);
                 break;
             case ShaderDataType.Vector3:
-                this.addUniformData(index, 3, arraySize, 16, Float32Array);
+                this.addUniformData(index, 3, arraySize, Float32Array);
                 break;
             case ShaderDataType.Vector4:
             case ShaderDataType.Color:
-                this.addUniformData(index, 4, arraySize, 16, Float32Array);
+                this.addUniformData(index, 4, arraySize, Float32Array);
                 break;
             case ShaderDataType.Matrix3x3:
                 // mat3 => 3 * vec4
-                this.addUniformData(index, 12, arraySize, 16, Float32Array);
+                this.addUniformData(index, 12, arraySize, Float32Array);
                 break;
             case ShaderDataType.Matrix4x4:
-                this.addUniformData(index, 16, arraySize, 16, Float32Array);
+                this.addUniformData(index, 16, arraySize, Float32Array);
                 break;
             case ShaderDataType.Buffer:
                 console.log("ShaderDataType.Buffer not support");
@@ -272,9 +283,33 @@ export class WebGLUniformBuffer implements IClone {
         }
     }
 
+    setArrayBuffer(index: number, value: Float32Array) {
+        let uniform = this.uniforms.get(index);
+        if (uniform) {
+
+            let arrayLength = uniform.arrayLength;
+            let size = uniform.size;
+
+            let alignment = size <= 4 ? 4 : 16;
+
+            for (let i = 0; i < arrayLength; i++) {
+                uniform.view.set(value.subarray(i * size, (i + 1) * size), i * alignment);
+            }
+
+            this.needUnload = true;
+        }
+    }
+
     setUniformData(index: number, type: ShaderDataType, data: any) {
         let uniform = this.uniforms.get(index);
         if (uniform) {
+
+            if (uniform.arrayLength > 0) {
+                // this.setBuffer(index, data);
+                this.setArrayBuffer(index, data);
+                return;
+            }
+
             switch (type) {
                 case ShaderDataType.Bool:
                     // todo
@@ -305,7 +340,7 @@ export class WebGLUniformBuffer implements IClone {
                 case ShaderDataType.Buffer:
                     // todo
                     // set array value
-                    this.setBuffer(index, data as Float32Array);
+                    // this.setBuffer(index, data as Float32Array);
                     break;
                 case ShaderDataType.None:
                 case ShaderDataType.Texture2D:
@@ -329,12 +364,14 @@ export class WebGLUniformBuffer implements IClone {
         dest._currentLength = this._currentLength;
         this.uniforms.forEach((uniform, key) => {
             let view: Float32Array;
-            let destUniform = {
+            let destUniform: Uniform = {
                 index: uniform.index,
                 size: uniform.size,
                 offset: uniform.offset,
                 dataView: uniform.dataView,
-                view: view
+                view: view,
+                viewByteLength: uniform.viewByteLength,
+                arrayLength: uniform.arrayLength
             }
             dest.uniforms.set(key, destUniform);
         });

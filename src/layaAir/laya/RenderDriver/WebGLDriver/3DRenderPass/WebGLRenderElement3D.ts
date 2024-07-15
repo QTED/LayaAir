@@ -150,19 +150,22 @@ export class WebGLRenderElement3D implements IRenderElement3D {
             if (Config3D._uniformBlock && !materialData.uniformBuffers.has("Material")) {
                 let buffer = new WebGLUniformBuffer("Material");
                 materialData.uniformBuffers.set("Material", buffer);
-                subShader._uniformTypeMap.forEach((value, key) => {
-                    let index = Shader3D.propertyNameToID(key);
-                    buffer.addUniform(index, value);
+                subShader._uniformMap.forEach((value, key) => {
+                    let index = value.id;
+                    let type = value.uniformtype;
+                    let arrayLength = value.arrayLength;
+                    buffer.addUniform(index, type, arrayLength);
                     materialData.uniformBuffersPropertyMap.set(index, buffer);
                 });
 
                 buffer.create();
 
-                subShader._uniformTypeMap.forEach((value, key) => {
-                    let index = Shader3D.propertyNameToID(key);
+                subShader._uniformMap.forEach((uniform, key) => {
+                    let index = uniform.id;
                     let data = materialData._data[index];
                     if (data) {
-                        buffer.setUniformData(index, value, data);
+                        let type = uniform.uniformtype;
+                        buffer.setUniformData(index, type, data);
                     }
                 });
 

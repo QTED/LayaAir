@@ -6,12 +6,13 @@ import { SubShader, UniformMapType } from "../../RenderEngine/RenderShader/SubSh
 import { LayaGL } from "../../layagl/LayaGL";
 import { IShaderCompiledObj } from "./ShaderCompile";
 import { ShaderNode } from "./ShaderNode";
+import { UniformProperty } from "../../RenderDriver/DriverDesign/RenderDevice/CommandUniformMap";
 export class ShaderProcessInfo {
     defineString: string[];
     vs: ShaderNode;
     ps: ShaderNode;
     attributeMap: { [name: string]: [number, ShaderDataType] };
-    uniformMap: Map<string, ShaderDataType>;
+    uniformMap: Map<string, UniformProperty>;
     is2D: boolean;
     //....其他数据
 };
