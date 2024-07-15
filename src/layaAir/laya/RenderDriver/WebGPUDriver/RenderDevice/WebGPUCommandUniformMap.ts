@@ -1,4 +1,4 @@
-import { CommandUniformMap, UniformProperty } from "../../DriverDesign/RenderDevice/CommandUniformMap";
+import { CommandUniformMap } from "../../DriverDesign/RenderDevice/CommandUniformMap";
 import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
 
 export class WebGPUCommandUniformMap extends CommandUniformMap {

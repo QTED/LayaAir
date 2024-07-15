@@ -6,6 +6,7 @@ import { SkinnedMeshSprite3D } from "../../../d3/core/SkinnedMeshSprite3D";
 import { Graphics } from "../../../display/Graphics";
 import { LayaGL } from "../../../layagl/LayaGL";
 import { ShaderNode } from "../../../webgl/utils/ShaderNode";
+import { UniformProperty } from "../../DriverDesign/RenderDevice/CommandUniformMap";
 import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
 import { TypeOutData } from "../ShaderCompile/WebGPUShaderCompileCode";
 import { WebGPUShaderCompileDef } from "../ShaderCompile/WebGPUShaderCompileDef";
@@ -1065,18 +1066,15 @@ ${textureGLSL_fs}
      * @param VS 
      * @param FS 
      */
-    static collectUniform(defineString: string[], uniformMap: UniformMapType, VS: ShaderNode, FS: ShaderNode) {
+    static collectUniform(defineString: string[], uniformMap: Map<string, UniformProperty>, VS: ShaderNode, FS: ShaderNode) {
         //将uniformMap转换为uniformMapEx
         const uniformMapEx: WebGPUUniformMapType = {};
-        for (const key in uniformMap) {
-            if (typeof uniformMap[key] === 'object') {
-                const blockUniform = <{ [name: string]: ShaderDataType }>uniformMap[key];
-                for (const uniformName in blockUniform) {
-                    const dataType = blockUniform[uniformName];
-                    uniformMapEx[uniformName] = { name: uniformName, type: dataType };
-                }
-            } else uniformMapEx[key] = { name: key, type: uniformMap[key] as ShaderDataType };
-        }
+        uniformMap.forEach((uniform, key) => {
+            uniformMapEx[key] = {
+                name: key,
+                type: uniform.uniformtype,
+            }
+        });
 
         defineString.push('GRAPHICS_API_GLES3'); //默认支持GLES3
 

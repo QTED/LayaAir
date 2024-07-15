@@ -10,6 +10,7 @@ import { Vector2 } from "../maths/Vector2";
 import { Vector3 } from "../maths/Vector3";
 import { Vector4 } from "../maths/Vector4";
 import { Loader } from "../net/Loader";
+import { UniformProperty } from "../RenderDriver/DriverDesign/RenderDevice/CommandUniformMap";
 import { ShaderData, ShaderDataDefaultValue, ShaderDataItem, ShaderDataType } from "../RenderDriver/DriverDesign/RenderDevice/ShaderData";
 import { IDefineDatas } from "../RenderDriver/RenderModuleData/Design/IDefineDatas";
 import { RenderState } from "../RenderDriver/RenderModuleData/Design/RenderState";
@@ -515,7 +516,7 @@ export class Material extends Resource implements IClone {
      * @returns 
      */
     effectiveProperty() {
-        return this._shader.getSubShaderAt(0)._uniformTypeMap;
+        return this._shader.getSubShaderAt(0)._uniformMap;
     }
 
     /**
@@ -538,7 +539,7 @@ export class Material extends Resource implements IClone {
         // todo subShader 选择
         let subShader = this._shader.getSubShaderAt(0);
         let defaultValue = subShader._uniformDefaultValue;
-        let typeMap = subShader._uniformTypeMap;
+        let typeMap = subShader._uniformMap;
         this.applyUniformDefaultValue(typeMap, defaultValue);
         this.ownerELement && (this.ownerELement.material = this);//更新RenderElementRenderQueue
     }
@@ -546,8 +547,9 @@ export class Material extends Resource implements IClone {
     /**
      * @internal
      */
-    applyUniformDefaultValue(typeMap: Map<string, ShaderDataType>, defaultValue: Record<string, ShaderDataItem>) {
-        typeMap.forEach((type, key) => {
+    applyUniformDefaultValue(uniformMap: Map<string, UniformProperty>, defaultValue: Record<string, ShaderDataItem>) {
+        uniformMap.forEach((uniform, key) => {
+            let type = uniform.uniformtype;
             if (defaultValue && defaultValue[key] != undefined) {
                 let value = defaultValue[key];
                 this.setShaderData(key, type, value);

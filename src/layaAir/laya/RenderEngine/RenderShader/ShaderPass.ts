@@ -70,7 +70,7 @@ export class ShaderPass extends ShaderCompileDefineBase {
         shaderProcessInfo.vs = shaderpass._VS;
         shaderProcessInfo.ps = shaderpass._PS;
         shaderProcessInfo.attributeMap = shaderpass._owner._attributeMap;
-        shaderProcessInfo.uniformMap = shaderpass._owner._uniformTypeMap;
+        shaderProcessInfo.uniformMap = shaderpass._owner._uniformMap;
         var defines: string[] = ShaderCompileDefineBase._defineStrings;
         defines.length = 0;
         Shader3D._getNamesByDefineData(compileDefine, defines);
