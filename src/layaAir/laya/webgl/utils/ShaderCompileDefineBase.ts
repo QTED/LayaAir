@@ -12,7 +12,7 @@ export class ShaderProcessInfo {
     vs: ShaderNode;
     ps: ShaderNode;
     attributeMap: { [name: string]: [number, ShaderDataType] };
-    uniformMap: Map<string, UniformProperty>;
+    uniformMap: Map<number, UniformProperty>;
     is2D: boolean;
     //....其他数据
 };

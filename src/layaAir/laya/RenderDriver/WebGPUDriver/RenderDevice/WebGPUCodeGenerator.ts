@@ -1,7 +1,6 @@
 import { Config3D } from "../../../../Config3D";
 import { RenderParams } from "../../../RenderEngine/RenderEnum/RenderParams";
 import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
-import { UniformMapType } from "../../../RenderEngine/RenderShader/SubShader";
 import { SkinnedMeshSprite3D } from "../../../d3/core/SkinnedMeshSprite3D";
 import { Graphics } from "../../../display/Graphics";
 import { LayaGL } from "../../../layagl/LayaGL";
@@ -1066,12 +1065,12 @@ ${textureGLSL_fs}
      * @param VS 
      * @param FS 
      */
-    static collectUniform(defineString: string[], uniformMap: Map<string, UniformProperty>, VS: ShaderNode, FS: ShaderNode) {
+    static collectUniform(defineString: string[], uniformMap: Map<number, UniformProperty>, VS: ShaderNode, FS: ShaderNode) {
         //将uniformMap转换为uniformMapEx
         const uniformMapEx: WebGPUUniformMapType = {};
         uniformMap.forEach((uniform, key) => {
             uniformMapEx[key] = {
-                name: key,
+                name: uniform.propertyName,
                 type: uniform.uniformtype,
             }
         });
