@@ -14,7 +14,6 @@ import { WebGLCommandUniformMap } from "../RenderDevice/WebGLCommandUniformMap";
 import { WebGLEngine } from "../RenderDevice/WebGLEngine";
 import { WebGLRenderGeometryElement } from "../RenderDevice/WebGLRenderGeometryElement";
 import { WebGLShaderInstance } from "../RenderDevice/WebGLShaderInstance";
-import { WebGLUniformBuffer } from "../RenderDevice/WebGLUniformBuffer";
 import { WebGLRenderContext3D } from "./WebGLRenderContext3D";
 
 export class WebGLRenderElement3D implements IRenderElement3D {
@@ -151,7 +150,9 @@ export class WebGLRenderElement3D implements IRenderElement3D {
             let shaderName = shader.name;
             // todo 
             // to subshader has different uniform map
-            materialData.createUniformBuffer("Material", subShader._uniformMap);
+            // materialData.createUniformBuffer("Material", subShader._uniformMap);
+
+            materialData.createUniformBufferBlock("Material", subShader._uniformMap);
 
         }
 

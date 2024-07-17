@@ -25,7 +25,7 @@ export class GLSLCodeGenerator {
         return res;
     }
 
-    static glslUniformString(uniformsMap: Map<string, UniformProperty>, useUniformBlock: boolean) {
+    static glslUniformString(uniformsMap: Map<number, UniformProperty>, useUniformBlock: boolean) {
         if (uniformsMap.size == 0) {
             return "";
         }
@@ -35,9 +35,9 @@ export class GLSLCodeGenerator {
             let blocksStr = "uniform Material {\n";
             uniformsMap.forEach((uniform, key) => {
                 let dataType = uniform.uniformtype;
-                let uniformName = key;
+                let uniformName = uniform.propertyName;
                 if (uniform.arrayLength > 0) {
-                    uniformName = `${key}[${uniform.arrayLength}]`;
+                    uniformName = `${uniformName}[${uniform.arrayLength}]`;
                 }
                 let typeStr = getAttributeType(dataType);
                 if (typeStr != "") {
@@ -58,9 +58,9 @@ export class GLSLCodeGenerator {
 
             uniformsMap.forEach((uniform, key) => {
                 let dataType = uniform.uniformtype;
-                let uniformName = key;
+                let uniformName = uniform.propertyName;
                 if (uniform.arrayLength > 0) {
-                    uniformName = `${key}[${uniform.arrayLength}]`;
+                    uniformName = `${uniformName}[${uniform.arrayLength}]`;
                 }
                 let typeStr = getAttributeType(dataType);
                 if (typeStr != "") {
@@ -74,7 +74,7 @@ export class GLSLCodeGenerator {
 
     static GLShaderLanguageProcess3D(defineString: string[],
         attributeMap: { [name: string]: [number, ShaderDataType] },
-        uniformMap: Map<string, UniformProperty>, VS: ShaderNode, FS: ShaderNode) {
+        uniformMap: Map<number, UniformProperty>, VS: ShaderNode, FS: ShaderNode) {
 
         var clusterSlices = Config3D.lightClusterCount;
         var defMap: any = {};

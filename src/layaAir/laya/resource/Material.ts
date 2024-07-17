@@ -516,6 +516,7 @@ export class Material extends Resource implements IClone {
      * @returns 
      */
     effectiveProperty() {
+        // todo 返回类型改变
         return this._shader.getSubShaderAt(0)._uniformMap;
     }
 
@@ -547,17 +548,18 @@ export class Material extends Resource implements IClone {
     /**
      * @internal
      */
-    applyUniformDefaultValue(uniformMap: Map<string, UniformProperty>, defaultValue: Record<string, ShaderDataItem>) {
+    applyUniformDefaultValue(uniformMap: Map<number, UniformProperty>, defaultValue: Record<string, ShaderDataItem>) {
         uniformMap.forEach((uniform, key) => {
             let type = uniform.uniformtype;
-            if (defaultValue && defaultValue[key] != undefined) {
-                let value = defaultValue[key];
-                this.setShaderData(key, type, value);
+            let uniformName = uniform.propertyName;
+            if (defaultValue && defaultValue[uniformName] != undefined) {
+                let value = defaultValue[uniformName];
+                this.setShaderData(uniformName, type, value);
             }
             else {
                 let value = ShaderDataDefaultValue(type);
                 if (value) {
-                    this.setShaderData(key, type, value);
+                    this.setShaderDataByIndex(key, type, value);
                 }
             }
         });

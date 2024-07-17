@@ -63,7 +63,7 @@ export class SubShader {
      * @internal
      * uniform 数据类型
      */
-    readonly _uniformMap: Map<string, UniformProperty>;
+    readonly _uniformMap: Map<number, UniformProperty>;
 
     /**@internal */
     _owner: Shader3D;
@@ -113,7 +113,7 @@ export class SubShader {
             arrayLength: arrayLength
         }
 
-        this._uniformMap.set(uniformName, uniform);
+        this._uniformMap.set(uniform.id, uniform);
 
         if (type == ShaderDataType.Texture2D || type == ShaderDataType.TextureCube || type == ShaderDataType.Texture3D || type == ShaderDataType.Texture2DArray) {
             let textureGammaDefine = Shader3D.getDefineByName(`Gamma_${uniformName}`);
@@ -149,7 +149,7 @@ export class SubShader {
                 let bindtypeMap = includeBindInfo["uniformMap"];
                 let bindDefaultValue = includeBindInfo["defaultValue"];
                 for (var i in bindtypeMap) {
-                    if (!this._uniformMap.has(i)) {
+                    if (!this._uniformMap.has(Shader3D.propertyNameToID(i))) {
                         this.addUniform(i, bindtypeMap[i]);
                     }
                 }

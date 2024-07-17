@@ -11,7 +11,7 @@ import { Texture2D } from "../../../../resource/Texture2D";
 import { TextureCube } from "../../../../resource/TextureCube";
 import { ShaderDataType } from "../../../DriverDesign/RenderDevice/ShaderData";
 import { WebGLEngine } from "../WebGLEngine";
-import { WebGLUniformBuffer } from "../WebGLUniformBuffer";
+import { WebGLUniformBufferBase } from "../WebGLUniformBufferBase";
 import { GLObject } from "./GLObject";
 
 
@@ -509,13 +509,13 @@ export class GLShaderInstance extends GLObject {
     /**
      * @internal
      */
-    _uniform_UniformBuffer(one: ShaderVariable, value: WebGLUniformBuffer) {
+    _uniform_UniformBuffer(one: ShaderVariable, value: WebGLUniformBufferBase) {
         let gl = <WebGL2RenderingContext>this._gl;
         if (value.needUnload) {
             value.upload();
         }
         // gl.bindBufferBase(gl.UNIFORM_BUFFER, one.location, value._buffer._glBuffer);
-        value._buffer.bindBufferBase(one.location);
+        value.bind(one.location);
     }
 
     /**

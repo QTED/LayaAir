@@ -31,6 +31,7 @@ import { GLVertexState } from "./WebGLEngine/GLVertexState";
 import { GlCapable } from "./WebGLEngine/GlCapable";
 import { WebGLConfig } from "./WebGLEngine/WebGLConfig";
 import { WebGLInternalTex } from "./WebGLInternalTex";
+import { WebGLUniformBufferBlock } from "./WebGLUniformBufferBlock";
 
 /**
  * 封装Webgl
@@ -138,6 +139,8 @@ export class WebGLEngine implements IRenderEngine {
     // private _textureResourcePool: any;
     // //TODO:管理FrameBuffer
     // private _RenderBufferResource: any;
+
+    bufferBlocks: Map<string, WebGLUniformBufferBlock>;
 
     //GPU统计数据
     private _GLStatisticsInfo: Map<GPUEngineStatisticsInfo, number> = new Map();
@@ -259,6 +262,8 @@ export class WebGLEngine implements IRenderEngine {
         this._GLTextureContext = this.isWebGL2 ? new GL2TextureContext(this) : new GLTextureContext(this);
         this._GLRenderDrawContext = new GLRenderDrawContext(this);
         canvas.addEventListener("webglcontextlost", this.webglContextLost)
+
+        this._initBufferBlock(this);
     }
 
     webglContextLost(e: any) {
@@ -274,6 +279,11 @@ export class WebGLEngine implements IRenderEngine {
         this._GLBufferBindMap[BufferTargetType.UNIFORM_BUFFER] = null;
     }
 
+    private _initBufferBlock(engine: WebGLEngine) {
+        this.bufferBlocks = new Map();
+        let materialBlock = new WebGLUniformBufferBlock("Material", engine);
+        this.bufferBlocks.set("Material", materialBlock);
+    }
 
     _getbindBuffer(target: BufferTargetType) {
         return this._GLBufferBindMap[target];

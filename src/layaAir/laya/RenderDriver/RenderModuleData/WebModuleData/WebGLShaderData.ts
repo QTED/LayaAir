@@ -11,9 +11,10 @@ import { BaseTexture } from "../../../resource/BaseTexture";
 import { Resource } from "../../../resource/Resource";
 import { InternalTexture } from "../../DriverDesign/RenderDevice/InternalTexture";
 import { ShaderData, ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
-import { WebGLCommandUniformMap } from "../../WebGLDriver/RenderDevice/WebGLCommandUniformMap";
 import { WebGLEngine } from "../../WebGLDriver/RenderDevice/WebGLEngine";
+import { WebGLSubUniformBuffer } from "../../WebGLDriver/RenderDevice/WebGLSubUniformBuffer";
 import { WebGLUniformBuffer } from "../../WebGLDriver/RenderDevice/WebGLUniformBuffer";
+import { WebGLUniformBufferBase } from "../../WebGLDriver/RenderDevice/WebGLUniformBufferBase";
 import { ShaderDefine } from "../Design/ShaderDefine";
 import { WebDefineDatas } from "./WebDefineDatas";
 
@@ -36,8 +37,10 @@ export class WebGLShaderData extends ShaderData {
 	/** @internal */
 	uniformBuffers: Map<string, WebGLUniformBuffer>;
 
+	subUniformBuffers: Map<string, WebGLSubUniformBuffer>;
+
 	/** @internal */
-	uniformBuffersPropertyMap: Map<number, WebGLUniformBuffer>;
+	uniformBuffersPropertyMap: Map<number, WebGLUniformBufferBase>;
 
 	/**
 	 * @internal	
@@ -53,9 +56,16 @@ export class WebGLShaderData extends ShaderData {
 		this._data = {};
 		this._gammaColorMap = new Map();
 		this.uniformBuffers = new Map();
+		this.subUniformBuffers = new Map();
 		this.uniformBuffersPropertyMap = new Map();
 	}
 
+	/**
+	 * @internal
+	 * @param name 
+	 * @param uniformMap 
+	 * @returns 
+	 */
 	createUniformBuffer(name: string, uniformMap: Map<number | string, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>): void {
 		if (!Config3D._uniformBlock || this.uniformBuffers.has(name)) {
 			return;
@@ -85,6 +95,38 @@ export class WebGLShaderData extends ShaderData {
 		this._data[id] = buffer;
 
 		return;
+	}
+
+	createUniformBufferBlock(name: string, uniformMap: Map<number | string, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>) {
+
+		if (!Config3D._uniformBlock) {
+			return;
+		}
+		else {
+			if (this.subUniformBuffers.has(name)) {
+				return;
+			}
+		}
+
+		let engine = <WebGLEngine>LayaGL.renderEngine;
+		let block = engine.bufferBlocks.get(name);
+		if (!block) {
+			return;
+		}
+
+		let subBuffer = block.createBuffer(name, uniformMap);
+		this.subUniformBuffers.set(name, subBuffer);
+		let id = Shader3D.propertyNameToID(name);
+		this._data[id] = subBuffer;
+
+		uniformMap.forEach(uniform => {
+			let uniformId = uniform.id;
+			let data = this._data[uniformId];
+			if (data) {
+				subBuffer.setUniformData(uniformId, uniform.uniformtype, data);
+			}
+		});
+
 	}
 
 	/**
@@ -143,6 +185,11 @@ export class WebGLShaderData extends ShaderData {
 			buffer.destroy();
 		});
 		this.uniformBuffers.clear();
+
+		this.subUniformBuffers.forEach((buffer) => {
+			buffer.destroy();
+		});
+		this.subUniformBuffers.clear();
 	}
 
 	/**
@@ -366,7 +413,7 @@ export class WebGLShaderData extends ShaderData {
 
 		let ubo = this.uniformBuffersPropertyMap.get(index);
 		if (ubo) {
-			ubo.setMatrix4x4(index, value);
+			ubo.setMatrix4x4(index, value.elements);
 		}
 	}
 
@@ -394,7 +441,7 @@ export class WebGLShaderData extends ShaderData {
 
 		let ubo = this.uniformBuffersPropertyMap.get(index);
 		if (ubo) {
-			ubo.setMatrix3x3(index, value);
+			ubo.setMatrix3x3(index, value.elements);
 		}
 	}
 
@@ -485,7 +532,7 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	cloneTo(destObject: WebGLShaderData): void {
 		var dest: WebGLShaderData = <WebGLShaderData>destObject;
-		var destData: { [key: string]: number | boolean | Vector2 | Vector3 | Vector4 | Matrix3x3 | Matrix4x4 | BaseTexture | WebGLUniformBuffer } = dest._data;
+		var destData: { [key: string]: number | boolean | Vector2 | Vector3 | Vector4 | Matrix3x3 | Matrix4x4 | BaseTexture | WebGLUniformBufferBase } = dest._data;
 
 		destObject.clearData();
 		for (var k in this._data) {//TODO:需要优化,杜绝is判断，慢
@@ -546,11 +593,18 @@ export class WebGLShaderData extends ShaderData {
 		this.uniformBuffers.forEach((buffer, key) => {
 			let destBuffer = buffer.clone();
 			dest.uniformBuffers.set(key, destBuffer);
-			destBuffer.uniforms.forEach((uniform, key) => {
+			destBuffer.descriptor.uniforms.forEach((uniform, key) => {
 				dest.uniformBuffersPropertyMap.set(key, destBuffer);
 			});
 			let bufferId = Shader3D.propertyNameToID(key);
 			destData[bufferId] = destBuffer;
+		});
+
+		this.subUniformBuffers.forEach((buffer, key) => {
+			let engine = <WebGLEngine>LayaGL.renderEngine;
+			let block = engine.bufferBlocks.get(key);
+			// 
+			console.error("subUniformBuffers cloneTo not implement");
 		});
 
 	}
