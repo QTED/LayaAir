@@ -93,12 +93,10 @@ export class GLBuffer extends GLObject {
     }
 
 
-
-
-    setData(srcData: ArrayBuffer | ArrayBufferView, offset: number): void {
+    setData(srcData: ArrayBuffer, offset: number): void {
         let gl = this._gl;
         this.bindBuffer();
-        gl.bufferSubData(this._glTarget, offset, <ArrayBufferView>srcData);
+        gl.bufferSubData(this._glTarget, offset, srcData);
         WebGLEngine.instance._addStatisticsInfo(GPUEngineStatisticsInfo.C_GeometryBufferUploadCount, 1);
         this.unbindBuffer();
     }
