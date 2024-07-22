@@ -97,12 +97,13 @@ export class WebGLShaderData extends ShaderData {
 		return;
 	}
 
-	createUniformBufferBlock(name: string, uniformMap: Map<number | string, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>) {
+	createUniformBufferBlock(name: string, uniformMap: Map<number, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>) {
 
 		if (!Config3D._uniformBlock) {
 			return;
 		}
 		else {
+			// todo 同时清理 UniformBuffers 同名 buffer ?
 			if (this.subUniformBuffers.has(name)) {
 				return;
 			}

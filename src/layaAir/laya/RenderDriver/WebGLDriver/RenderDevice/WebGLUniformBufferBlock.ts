@@ -66,7 +66,7 @@ export class WebGLUniformBufferBlock {
         return null;
     }
 
-    createBuffer(name: string, uniformMap: Map<number | string, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>) {
+    createBuffer(name: string, uniformMap: Map<number, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>) {
 
         let descriptor = new WebGLUniformBufferDescriptor(name);
 

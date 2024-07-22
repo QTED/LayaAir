@@ -135,10 +135,6 @@ export class GLShaderInstance extends GLObject {
         WebGLEngine.instance._addStatisticsInfo(GPUEngineStatisticsInfo.T_ShaderCompile, (performance.now() - preTime) | 0);
     }
 
-    private _legalUBObyteLength(bytelength: number): number {
-        return Math.ceil(bytelength / 16) * 16;
-    }
-
     /**
     * @internal
     */
