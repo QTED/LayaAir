@@ -10,7 +10,7 @@ export class WebGLSubUniformBuffer extends WebGLUniformBufferBase {
 
     descriptor: WebGLUniformBufferDescriptor;
 
-    needUnload: boolean = false;
+    needUpload: boolean = false;
 
     get uniforms(): ReadonlyMap<number, Uniform> {
         return this.descriptor.uniforms;
@@ -28,7 +28,7 @@ export class WebGLSubUniformBuffer extends WebGLUniformBufferBase {
 
     upload() {
         this._buffer.setDataEx(this._data, this.offset, this.size / this._data.BYTES_PER_ELEMENT);
-        this.needUnload = false;
+        this.needUpload = false;
     }
 
     bind(location: number) {

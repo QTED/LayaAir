@@ -15,7 +15,7 @@ export abstract class WebGLUniformBufferBase {
 
     descriptor: WebGLUniformBufferDescriptor;
 
-    needUnload: boolean = false;
+    needUpload: boolean = false;
 
     abstract upload(): void;
 
@@ -28,7 +28,7 @@ export abstract class WebGLUniformBufferBase {
         if (uniform) {
             uniform.view[0] = value;
 
-            this.needUnload = true;
+            this.needUpload = true;
         }
     }
 
@@ -37,7 +37,7 @@ export abstract class WebGLUniformBufferBase {
         if (uniform) {
             uniform.view[0] = value;
 
-            this.needUnload = true;
+            this.needUpload = true;
         }
     }
 
@@ -47,7 +47,7 @@ export abstract class WebGLUniformBufferBase {
             uniform.view[0] = value.x;
             uniform.view[1] = value.y;
 
-            this.needUnload = true;
+            this.needUpload = true;
         }
     }
 
@@ -58,7 +58,7 @@ export abstract class WebGLUniformBufferBase {
             uniform.view[1] = value.y;
             uniform.view[2] = value.z;
 
-            this.needUnload = true;
+            this.needUpload = true;
         }
     }
 
@@ -70,7 +70,7 @@ export abstract class WebGLUniformBufferBase {
             uniform.view[2] = value.z;
             uniform.view[3] = value.w;
 
-            this.needUnload = true;
+            this.needUpload = true;
         }
     }
 
@@ -83,7 +83,7 @@ export abstract class WebGLUniformBufferBase {
                 }
             }
 
-            this.needUnload = true;
+            this.needUpload = true;
         }
     }
 
@@ -92,7 +92,7 @@ export abstract class WebGLUniformBufferBase {
         if (uniform) {
             uniform.view.set(value);
 
-            this.needUnload = true;
+            this.needUpload = true;
         }
     }
 
@@ -102,7 +102,7 @@ export abstract class WebGLUniformBufferBase {
         if (uniform) {
             uniform.view.set(value);
 
-            this.needUnload = true;
+            this.needUpload = true;
         }
     }
 
@@ -118,7 +118,7 @@ export abstract class WebGLUniformBufferBase {
                 uniform.view.set(value.subarray(i * size, (i + 1) * size), i * alignStride);
             }
 
-            this.needUnload = true;
+            this.needUpload = true;
         }
     }
 
@@ -137,7 +137,7 @@ export abstract class WebGLUniformBufferBase {
                 }
             }
 
-            this.needUnload = true;
+            this.needUpload = true;
         }
     }
 

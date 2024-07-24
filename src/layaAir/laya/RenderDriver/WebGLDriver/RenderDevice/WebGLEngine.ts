@@ -6,7 +6,6 @@ import { RenderCapable } from "../../../RenderEngine/RenderEnum/RenderCapable";
 import { RenderClearFlag } from "../../../RenderEngine/RenderEnum/RenderClearFlag";
 import { RenderParams } from "../../../RenderEngine/RenderEnum/RenderParams";
 import { GPUEngineStatisticsInfo } from "../../../RenderEngine/RenderEnum/RenderStatInfo";
-import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { ShaderVariable } from "../../../RenderEngine/RenderShader/ShaderVariable";
 import { CommandEncoder } from "../../../layagl/CommandEncoder";
 import { Color } from "../../../maths/Color";
@@ -31,6 +30,7 @@ import { GLVertexState } from "./WebGLEngine/GLVertexState";
 import { GlCapable } from "./WebGLEngine/GlCapable";
 import { WebGLConfig } from "./WebGLEngine/WebGLConfig";
 import { WebGLInternalTex } from "./WebGLInternalTex";
+import { WebGLBufferManager } from "./WebGLUniformBuffer/WebGLBufferManager";
 import { WebGLUniformBufferBlock } from "./WebGLUniformBufferBlock";
 
 /**
@@ -141,6 +141,8 @@ export class WebGLEngine implements IRenderEngine {
     // private _RenderBufferResource: any;
 
     bufferBlocks: Map<string, WebGLUniformBufferBlock>;
+
+    bufferMgr: WebGLBufferManager;
 
     //GPU统计数据
     private _GLStatisticsInfo: Map<GPUEngineStatisticsInfo, number> = new Map();
@@ -280,9 +282,14 @@ export class WebGLEngine implements IRenderEngine {
     }
 
     private _initBufferBlock(engine: WebGLEngine) {
-        this.bufferBlocks = new Map();
-        let materialBlock = new WebGLUniformBufferBlock("Material", engine);
-        this.bufferBlocks.set("Material", materialBlock);
+        const useUBO = Config3D.enableUniformBufferObject && this.getCapable(RenderCapable.UnifromBufferObject);
+        if (useUBO) {
+            this.bufferBlocks = new Map();
+            let materialBlock = new WebGLUniformBufferBlock("Material", engine);
+            this.bufferBlocks.set("Material", materialBlock);
+
+            this.bufferMgr = new WebGLBufferManager(this);
+        }
     }
 
     _getbindBuffer(target: BufferTargetType) {

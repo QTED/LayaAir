@@ -1,0 +1,75 @@
+import { ShaderData, ShaderDataType } from "../../../DriverDesign/RenderDevice/ShaderData";
+import { IUniformBufferUser } from "../../../DriverDesign/RenderDevice/UniformBufferManager/IUniformBufferUser";
+import { UniformBufferAlone } from "../../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferAlone";
+import { UniformBufferBlock } from "../../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferBlock";
+import { UniformBufferManager } from "../../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferManager";
+import { WebGLEngine } from "../WebGLEngine";
+import { GLBuffer } from "../WebGLEngine/GLBuffer";
+import { WebGLUniformBufferBase } from "../WebGLUniformBufferBase";
+import { WebGLUniformBufferDescriptor } from "../WebGLUniformBufferDescriptor";
+import { WebGLBufferManager } from "./WebGLBufferManager";
+
+export class WebGLSubBuffer extends WebGLUniformBufferBase implements IUniformBufferUser {
+
+    upload(): void {
+        if (this.needUpload) {
+            this.bufferBlock.needUpload();
+            this.needUpload = false;
+        }
+        // this.manager.upload();
+    }
+    bind(location: number): void {
+        let buffer = <GLBuffer>this.bufferBlock.cluster.buffer;
+        buffer.bindBufferRange(location, this.bufferBlock.offset, this.bufferBlock.size);
+
+    }
+    destroy(): void {
+        this.manager.freeBlock(this.bufferBlock);
+    }
+
+    needUpload: boolean;
+    bufferBlock: UniformBufferBlock;
+    bufferAlone: UniformBufferAlone;
+    manager: UniformBufferManager;
+    data: ShaderData;
+    offset: number;
+
+    name: string;
+    size: number;
+
+    constructor(name: string, uniformMap: Map<number, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>, mgr: WebGLBufferManager, data: ShaderData) {
+        super();
+        this.name = name;
+
+        let descriptor = new WebGLUniformBufferDescriptor(name);
+        uniformMap.forEach(uniform => {
+            descriptor.addUniform(uniform.id, uniform.uniformtype, uniform.arrayLength);
+        });
+        descriptor.finish(256 / 4);
+        let bufferSize = descriptor.byteLength;
+        this.descriptor = descriptor;
+
+        this.size = bufferSize;
+        this.manager = mgr;
+        this.data = data;
+        this.needUpload = true;
+        this.bufferBlock = mgr.getBlock(bufferSize, this);
+    }
+
+    clearGPUBufferBind(): void {
+        throw new Error("Method not implemented.");
+    }
+    notifyGPUBufferChange(): void {
+        this.offset = this.bufferBlock.offset;
+        this.needUpload = true;
+
+        this.descriptor.uniforms.forEach(uniform => {
+
+            let size = uniform.viewByteLength / uniform.dataView.BYTES_PER_ELEMENT;
+            let offset = uniform.offset + this.bufferBlock.offset;
+
+            uniform.view = new uniform.dataView(this.bufferBlock.cluster.data, offset, size);
+        });
+    }
+
+}

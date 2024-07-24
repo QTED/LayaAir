@@ -365,8 +365,9 @@ export class GLShaderInstance extends GLObject {
     /**
      * @internal
      */
-    _uniformMatrix3fv(one: any, m: Matrix3x3): number {
-        let value = m.elements;
+    _uniformMatrix3fv(one: any, value: Float32Array): number {
+        // let value = m.elements;
+        // todo no ubo no array item
         this._gl.uniformMatrix3fv(one.location, false, value);
         return 1;
     }
@@ -507,7 +508,7 @@ export class GLShaderInstance extends GLObject {
      */
     _uniform_UniformBuffer(one: ShaderVariable, value: WebGLUniformBufferBase) {
         let gl = <WebGL2RenderingContext>this._gl;
-        if (value.needUnload) {
+        if (value.needUpload) {
             value.upload();
         }
         // gl.bindBufferBase(gl.UNIFORM_BUFFER, one.location, value._buffer._glBuffer);
