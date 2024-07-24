@@ -33,7 +33,7 @@ export class WebGLUniformBuffer extends WebGLUniformBufferBase {
         this._buffer.bindBuffer();
         this._buffer.setDataLength(descriptor.byteLength);
 
-        this.needUnload = true;
+        this.needUpload = true;
     }
 
     /**
@@ -48,7 +48,7 @@ export class WebGLUniformBuffer extends WebGLUniformBufferBase {
 
     upload() {
         this._buffer.setData(this._data, 0);
-        this.needUnload = false;
+        this.needUpload = false;
     }
 
     bind(location: number) {

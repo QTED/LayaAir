@@ -9,6 +9,7 @@ import { Scene3D } from "../../../d3/core/scene/Scene3D";
 import { Scene3DShaderDeclaration } from "../../../d3/core/scene/Scene3DShaderDeclaration";
 import { DepthPass } from "../../../d3/depthMap/DepthPass";
 import { ShadowCasterPass } from "../../../d3/shadowMap/ShadowCasterPass";
+import { LayaGL } from "../../../layagl/LayaGL";
 import { Vector4 } from "../../../maths/Vector4";
 import { Viewport } from "../../../maths/Viewport";
 import { DepthTextureMode, RenderTexture } from "../../../resource/RenderTexture";
@@ -18,6 +19,7 @@ import { WebBaseRenderNode } from "../../RenderModuleData/WebModuleData/3D/WebBa
 import { WebDirectLight } from "../../RenderModuleData/WebModuleData/3D/WebDirectLight";
 import { WebCameraNodeData } from "../../RenderModuleData/WebModuleData/3D/WebModuleData";
 import { WebSpotLight } from "../../RenderModuleData/WebModuleData/3D/WebSpotLight";
+import { WebGLEngine } from "../RenderDevice/WebGLEngine";
 import { WebGLInternalRT } from "../RenderDevice/WebGLInternalRT";
 import { WebGLForwardAddRP } from "./WebGLForwardAddRP";
 import { WebGLRenderContext3D } from "./WebGLRenderContext3D";
@@ -200,6 +202,17 @@ export class WebGLRender3DProcess implements IRender3DProcess {
     }
 
     fowardRender(context: WebGLRenderContext3D, camera: Camera): void {
+        let engine = <WebGLEngine>LayaGL.renderEngine;
+        if (engine.bufferMgr) {
+            engine.bufferMgr.startFrame();
+            // engine.bufferMgr.upload();
+            engine.bufferMgr.clustersAll.forEach(clusters => {
+                for (let i = clusters.length - 1; i > -1; i--) {
+                    clusters[i].upload();
+                }
+            })
+        }
+
         this.initRenderpass(camera, context);
 
         this.renderDepth(camera);
@@ -210,6 +223,18 @@ export class WebGLRender3DProcess implements IRender3DProcess {
         this.renderFowarAddCameraPass(context, this.renderpass, renderList, count);
 
         Camera.depthPass.cleanUp();
+
+        if (engine.bufferMgr) {
+            engine.bufferMgr.startFrame();
+            // engine.bufferMgr.upload();
+            engine.bufferMgr.clustersAll.forEach(clusters => {
+                for (let i = clusters.length - 1; i > -1; i--) {
+                    // clusters[i].upload();
+                    clusters[i].optimize();
+                }
+            })
+        }
+
     }
 
     renderFowarAddCameraPass(context: WebGLRenderContext3D, renderpass: WebGLForwardAddRP, list: WebBaseRenderNode[], count: number): void {

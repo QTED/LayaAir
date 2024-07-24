@@ -152,7 +152,8 @@ export class WebGLRenderElement3D implements IRenderElement3D {
             // to subshader has different uniform map
             // materialData.createUniformBuffer("Material", subShader._uniformMap);
 
-            materialData.createUniformBufferBlock("Material", subShader._uniformMap);
+            // materialData.createUniformBufferBlock("Material", subShader._uniformMap);
+            materialData.createSubBuffer("Material", subShader._uniformMap);
 
         }
 

@@ -12,9 +12,12 @@ import { Resource } from "../../../resource/Resource";
 import { InternalTexture } from "../../DriverDesign/RenderDevice/InternalTexture";
 import { ShaderData, ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
 import { WebGLEngine } from "../../WebGLDriver/RenderDevice/WebGLEngine";
+import { GLBuffer } from "../../WebGLDriver/RenderDevice/WebGLEngine/GLBuffer";
 import { WebGLSubUniformBuffer } from "../../WebGLDriver/RenderDevice/WebGLSubUniformBuffer";
 import { WebGLUniformBuffer } from "../../WebGLDriver/RenderDevice/WebGLUniformBuffer";
+import { WebGLSubBuffer } from "../../WebGLDriver/RenderDevice/WebGLUniformBuffer/WebGLSubBuffer";
 import { WebGLUniformBufferBase } from "../../WebGLDriver/RenderDevice/WebGLUniformBufferBase";
+import { WebGLUniformBufferDescriptor } from "../../WebGLDriver/RenderDevice/WebGLUniformBufferDescriptor";
 import { ShaderDefine } from "../Design/ShaderDefine";
 import { WebDefineDatas } from "./WebDefineDatas";
 
@@ -39,6 +42,8 @@ export class WebGLShaderData extends ShaderData {
 
 	subUniformBuffers: Map<string, WebGLSubUniformBuffer>;
 
+	subBuffers: Map<string, WebGLSubBuffer>;
+
 	/** @internal */
 	uniformBuffersPropertyMap: Map<number, WebGLUniformBufferBase>;
 
@@ -57,6 +62,7 @@ export class WebGLShaderData extends ShaderData {
 		this._gammaColorMap = new Map();
 		this.uniformBuffers = new Map();
 		this.subUniformBuffers = new Map();
+		this.subBuffers = new Map();
 		this.uniformBuffersPropertyMap = new Map();
 	}
 
@@ -128,6 +134,37 @@ export class WebGLShaderData extends ShaderData {
 			}
 		});
 
+	}
+
+	createSubBuffer(name: string, uniformMap: Map<number, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>) {
+		if (!Config3D._uniformBlock) {
+			return;
+		}
+		else {
+			// todo 同时清理 UniformBuffers 同名 buffer ?
+			if (this.subBuffers.has(name)) {
+				return;
+			}
+		}
+
+		let engine = <WebGLEngine>LayaGL.renderEngine;
+
+		let mgr = engine.bufferMgr;
+		let uniformBuffer = new WebGLSubBuffer(name, uniformMap, mgr, this);
+		uniformBuffer.notifyGPUBufferChange();
+
+		let id = Shader3D.propertyNameToID(name);
+		this._data[id] = uniformBuffer;
+		this.subBuffers.set(name, uniformBuffer);
+
+		uniformMap.forEach(uniform => {
+			let uniformId = uniform.id;
+			let data = this._data[uniformId];
+			if (data) {
+				uniformBuffer.setUniformData(uniformId, uniform.uniformtype, data);
+			}
+			this.uniformBuffersPropertyMap.set(uniformId, uniformBuffer);
+		});
 	}
 
 	/**
