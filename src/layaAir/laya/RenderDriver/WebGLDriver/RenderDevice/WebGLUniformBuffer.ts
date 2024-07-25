@@ -1,6 +1,7 @@
 import { LayaGL } from "../../../layagl/LayaGL";
 import { BufferTargetType, BufferUsage } from "../../../RenderEngine/RenderEnum/BufferTargetType";
 import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
+import { GLBuffer } from "./WebGLEngine/GLBuffer";
 import { WebGLUniformBufferBase } from "./WebGLUniformBufferBase";
 import { WebGLUniformBufferDescriptor } from "./WebGLUniformBufferDescriptor";
 
@@ -8,6 +9,10 @@ import { WebGLUniformBufferDescriptor } from "./WebGLUniformBufferDescriptor";
  * 
  */
 export class WebGLUniformBuffer extends WebGLUniformBufferBase {
+
+    _data: Float32Array;
+
+    _buffer: GLBuffer;
 
     name: string;
 

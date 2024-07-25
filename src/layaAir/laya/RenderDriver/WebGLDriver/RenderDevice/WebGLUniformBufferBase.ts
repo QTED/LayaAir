@@ -4,14 +4,9 @@ import { Vector2 } from "../../../maths/Vector2";
 import { Vector3 } from "../../../maths/Vector3";
 import { Vector4 } from "../../../maths/Vector4";
 import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
-import { GLBuffer } from "./WebGLEngine/GLBuffer";
 import { WebGLUniformBufferDescriptor } from "./WebGLUniformBufferDescriptor";
 
 export abstract class WebGLUniformBufferBase {
-
-    _data: Float32Array;
-
-    _buffer: GLBuffer;
 
     descriptor: WebGLUniformBufferDescriptor;
 

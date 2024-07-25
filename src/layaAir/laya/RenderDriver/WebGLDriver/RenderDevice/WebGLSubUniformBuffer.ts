@@ -4,6 +4,10 @@ import { Uniform, WebGLUniformBufferDescriptor } from "./WebGLUniformBufferDescr
 
 export class WebGLSubUniformBuffer extends WebGLUniformBufferBase {
 
+    _data: Float32Array;
+
+    _buffer: GLBuffer;
+
     offset: number;
 
     size: number;
