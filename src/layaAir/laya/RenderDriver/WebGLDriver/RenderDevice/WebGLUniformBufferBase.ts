@@ -15,7 +15,13 @@ export abstract class WebGLUniformBufferBase {
 
     descriptor: WebGLUniformBufferDescriptor;
 
-    needUpload: boolean = false;
+    protected _needUpload: boolean;
+    public get needUpload(): boolean {
+        return this._needUpload;
+    }
+    public set needUpload(value: boolean) {
+        this._needUpload = value;
+    }
 
     abstract upload(): void;
 

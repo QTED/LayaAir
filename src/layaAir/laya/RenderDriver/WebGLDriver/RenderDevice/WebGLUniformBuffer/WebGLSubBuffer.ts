@@ -13,7 +13,7 @@ export class WebGLSubBuffer extends WebGLUniformBufferBase implements IUniformBu
 
     upload(): void {
         if (this.needUpload) {
-            this.bufferBlock.needUpload();
+            // this.bufferBlock.needUpload();
             this.needUpload = false;
         }
         // this.manager.upload();
@@ -27,7 +27,14 @@ export class WebGLSubBuffer extends WebGLUniformBufferBase implements IUniformBu
         this.manager.freeBlock(this.bufferBlock);
     }
 
-    needUpload: boolean;
+    public get needUpload(): boolean {
+        return this._needUpload;
+    }
+    public set needUpload(value: boolean) {
+        this.bufferBlock.needUpload();
+        this._needUpload = value;
+    }
+
     bufferBlock: UniformBufferBlock;
     bufferAlone: UniformBufferAlone;
     manager: UniformBufferManager;
@@ -52,14 +59,18 @@ export class WebGLSubBuffer extends WebGLUniformBufferBase implements IUniformBu
         this.size = bufferSize;
         this.manager = mgr;
         this.data = data;
-        this.needUpload = true;
         this.bufferBlock = mgr.getBlock(bufferSize, this);
+        this.needUpload = true;
     }
 
     clearGPUBufferBind(): void {
         throw new Error("Method not implemented.");
     }
     notifyGPUBufferChange(): void {
+
+        console.log("Sub buffer optimize");
+        
+
         this.offset = this.bufferBlock.offset;
         this.needUpload = true;
 
@@ -70,6 +81,9 @@ export class WebGLSubBuffer extends WebGLUniformBufferBase implements IUniformBu
 
             uniform.view = new uniform.dataView(this.bufferBlock.cluster.data, offset, size);
         });
+        // this.needUpload = true;
+        this.bufferBlock.cluster.upload();
+        this.needUpload = false;
     }
 
 }
