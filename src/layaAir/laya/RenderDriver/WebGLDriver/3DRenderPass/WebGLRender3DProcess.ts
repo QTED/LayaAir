@@ -208,7 +208,8 @@ export class WebGLRender3DProcess implements IRender3DProcess {
             // engine.bufferMgr.upload();
             engine.bufferMgr.clustersAll.forEach(clusters => {
                 for (let i = clusters.length - 1; i > -1; i--) {
-                    clusters[i].upload();
+                    let cluster = clusters[i];
+                    cluster.upload();
                 }
             })
         }

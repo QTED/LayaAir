@@ -10,8 +10,6 @@ export class WebGLSubUniformBuffer extends WebGLUniformBufferBase {
 
     descriptor: WebGLUniformBufferDescriptor;
 
-    needUpload: boolean = false;
-
     get uniforms(): ReadonlyMap<number, Uniform> {
         return this.descriptor.uniforms;
     }
