@@ -3,7 +3,6 @@ import { IUniformBufferUser } from "../../../DriverDesign/RenderDevice/UniformBu
 import { UniformBufferAlone } from "../../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferAlone";
 import { UniformBufferBlock } from "../../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferBlock";
 import { UniformBufferManager } from "../../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferManager";
-import { WebGLEngine } from "../WebGLEngine";
 import { GLBuffer } from "../WebGLEngine/GLBuffer";
 import { WebGLUniformBufferBase } from "../WebGLUniformBufferBase";
 import { WebGLUniformBufferDescriptor } from "../WebGLUniformBufferDescriptor";
@@ -12,11 +11,7 @@ import { WebGLBufferManager } from "./WebGLBufferManager";
 export class WebGLSubBuffer extends WebGLUniformBufferBase implements IUniformBufferUser {
 
     upload(): void {
-        if (this.needUpload) {
-            // this.bufferBlock.needUpload();
-            this.needUpload = false;
-        }
-        // this.manager.upload();
+        // sub buffer value alread upload in buffer manager
     }
     bind(location: number): void {
         let buffer = <GLBuffer>this.bufferBlock.cluster.buffer;
@@ -31,7 +26,9 @@ export class WebGLSubBuffer extends WebGLUniformBufferBase implements IUniformBu
         return this._needUpload;
     }
     public set needUpload(value: boolean) {
-        this.bufferBlock.needUpload();
+        if (value) {
+            this.bufferBlock.needUpload();
+        }
         this._needUpload = value;
     }
 
@@ -64,12 +61,12 @@ export class WebGLSubBuffer extends WebGLUniformBufferBase implements IUniformBu
     }
 
     clearGPUBufferBind(): void {
-        throw new Error("Method not implemented.");
+        // throw new Error("Method not implemented.");
     }
     notifyGPUBufferChange(): void {
 
         console.log("Sub buffer optimize");
-        
+
 
         this.offset = this.bufferBlock.offset;
         this.needUpload = true;
