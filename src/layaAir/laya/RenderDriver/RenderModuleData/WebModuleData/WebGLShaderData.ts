@@ -138,12 +138,13 @@ export class WebGLShaderData extends ShaderData {
 
 	createSubBuffer(name: string, uniformMap: Map<number, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>) {
 		if (!Config3D._uniformBlock) {
-			return;
+			return null;
 		}
 		else {
 			// todo 同时清理 UniformBuffers 同名 buffer ?
-			if (this.subBuffers.has(name)) {
-				return;
+			let subBuffer = this.subBuffers.get(name);
+			if (subBuffer) {
+				return subBuffer;
 			}
 		}
 
@@ -165,6 +166,8 @@ export class WebGLShaderData extends ShaderData {
 			}
 			this.uniformBuffersPropertyMap.set(uniformId, uniformBuffer);
 		});
+
+		return uniformBuffer;
 	}
 
 	/**
