@@ -65,9 +65,6 @@ export class WebGLSubBuffer extends WebGLUniformBufferBase implements IUniformBu
     }
     notifyGPUBufferChange(): void {
 
-        console.log("Sub buffer optimize");
-
-
         this.offset = this.bufferBlock.offset;
         this.needUpload = true;
 

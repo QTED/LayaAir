@@ -153,7 +153,10 @@ export class WebGLRenderElement3D implements IRenderElement3D {
             // materialData.createUniformBuffer("Material", subShader._uniformMap);
 
             // materialData.createUniformBufferBlock("Material", subShader._uniformMap);
-            materialData.createSubBuffer("Material", subShader._uniformMap);
+            let matSubBuffer = materialData.createSubBuffer("Material", subShader._uniformMap);
+            if (matSubBuffer && matSubBuffer.needUpload) {
+                matSubBuffer.bufferBlock.needUpload();
+            }
 
         }
 
