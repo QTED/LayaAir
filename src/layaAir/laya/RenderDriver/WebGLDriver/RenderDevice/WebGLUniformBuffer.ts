@@ -74,7 +74,7 @@ export class WebGLUniformBuffer extends WebGLUniformBufferBase {
     destroy() {
         this._data = null;
         this._buffer.destroy();
-        this.descriptor.uniforms.clear();
+        this.descriptor.destroy();
         this.descriptor = null;
     }
 }

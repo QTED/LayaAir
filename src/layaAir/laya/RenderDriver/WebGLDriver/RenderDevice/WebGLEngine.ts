@@ -30,8 +30,7 @@ import { GLVertexState } from "./WebGLEngine/GLVertexState";
 import { GlCapable } from "./WebGLEngine/GlCapable";
 import { WebGLConfig } from "./WebGLEngine/WebGLConfig";
 import { WebGLInternalTex } from "./WebGLInternalTex";
-import { WebGLBufferManager } from "./WebGLUniformBuffer/WebGLBufferManager";
-import { WebGLUniformBufferBlock } from "./WebGLUniformBufferBlock";
+import { WebGLBufferManager } from "./WebGLBufferManager";
 import { EventDispatcher } from "../../../events/EventDispatcher";
 import { WebGLInternalRT } from "./WebGLInternalRT";
 import { RenderTargetFormat } from "../../../RenderEngine/RenderEnum/RenderTargetFormat";
@@ -150,8 +149,7 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
     // //TODO:管理FrameBuffer
     // private _RenderBufferResource: any;
 
-    bufferBlocks: Map<string, WebGLUniformBufferBlock>;
-
+    /**@internal */
     bufferMgr: WebGLBufferManager;
 
     //GPU统计数据
@@ -323,11 +321,10 @@ export class WebGLEngine extends EventDispatcher implements IRenderEngine {
     private _initBufferBlock(engine: WebGLEngine) {
         const useUBO = Config3D.enableUniformBufferObject && this.getCapable(RenderCapable.UnifromBufferObject);
         if (useUBO) {
-            this.bufferBlocks = new Map();
-            let materialBlock = new WebGLUniformBufferBlock("Material", engine);
-            this.bufferBlocks.set("Material", materialBlock);
+            let gl = <WebGL2RenderingContext>this._context;
+            let offsetAlignment = gl.getParameter(gl.UNIFORM_BUFFER_OFFSET_ALIGNMENT);
 
-            this.bufferMgr = new WebGLBufferManager(this);
+            this.bufferMgr = new WebGLBufferManager(this, offsetAlignment);
         }
     }
 
