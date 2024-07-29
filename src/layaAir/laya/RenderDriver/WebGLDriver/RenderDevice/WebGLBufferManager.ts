@@ -1,18 +1,19 @@
 
-import { BufferTargetType, BufferUsage } from "../../../../RenderEngine/RenderEnum/BufferTargetType";
-import { GPUEngineStatisticsInfo } from "../../../../RenderEngine/RenderEnum/RenderStatInfo";
-import { UniformBufferManager } from "../../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferManager";
-import { WebGLEngine } from "../WebGLEngine";
-import { GLBuffer } from "../WebGLEngine/GLBuffer";
+import { BufferTargetType, BufferUsage } from "../../../RenderEngine/RenderEnum/BufferTargetType";
+import { GPUEngineStatisticsInfo } from "../../../RenderEngine/RenderEnum/RenderStatInfo";
+import { UniformBufferManager } from "../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferManager";
+import { WebGLEngine } from "./WebGLEngine";
+import { GLBuffer } from "./WebGLEngine/GLBuffer";
 
 export class WebGLBufferManager extends UniformBufferManager {
 
     engine: WebGLEngine;
 
-    constructor(engine: WebGLEngine) {
+    constructor(engine: WebGLEngine, offsetAlignment: number) {
         super(true);
         this.engine = engine;
 
+        this.byteAlign = offsetAlignment;
         this.renderContext = {};
         this.renderContext.notifyGPUBufferChange = () => { };
     }

@@ -177,4 +177,8 @@ export class WebGLUniformBufferDescriptor implements IClone {
         destObject.finish();
     }
 
+    destroy() {
+        this.uniforms.clear();
+    }
+
 }

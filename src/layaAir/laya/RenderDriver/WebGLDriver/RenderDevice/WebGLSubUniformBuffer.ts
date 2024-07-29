@@ -1,50 +1,92 @@
+import { ShaderData, ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
+import { IUniformBufferUser } from "../../DriverDesign/RenderDevice/UniformBufferManager/IUniformBufferUser";
+import { UniformBufferAlone } from "../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferAlone";
+import { UniformBufferBlock } from "../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferBlock";
+import { UniformBufferManager } from "../../DriverDesign/RenderDevice/UniformBufferManager/UniformBufferManager";
 import { GLBuffer } from "./WebGLEngine/GLBuffer";
 import { WebGLUniformBufferBase } from "./WebGLUniformBufferBase";
-import { Uniform, WebGLUniformBufferDescriptor } from "./WebGLUniformBufferDescriptor";
+import { WebGLUniformBufferDescriptor } from "./WebGLUniformBufferDescriptor";
+import { WebGLBufferManager } from "./WebGLBufferManager";
 
-export class WebGLSubUniformBuffer extends WebGLUniformBufferBase {
+export class WebGLSubUniformBuffer extends WebGLUniformBufferBase implements IUniformBufferUser {
 
-    _data: Float32Array;
+    /** @interlal */
+    uniformMap: Map<number, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>;
 
-    _buffer: GLBuffer;
+    upload(): void {
+        // sub buffer value alread upload in buffer manager
+    }
+    bind(location: number): void {
+        let buffer = <GLBuffer>this.bufferBlock.cluster.buffer;
+        buffer.bindBufferRange(location, this.bufferBlock.offset, this.bufferBlock.size);
+    }
 
+    public get needUpload(): boolean {
+        return this._needUpload;
+    }
+    public set needUpload(value: boolean) {
+        if (value) {
+            this.bufferBlock.needUpload();
+        }
+        this._needUpload = value;
+    }
+
+    bufferBlock: UniformBufferBlock;
+    bufferAlone: UniformBufferAlone;
+    manager: WebGLBufferManager;
+    data: ShaderData;
     offset: number;
 
+    name: string;
     size: number;
 
-    descriptor: WebGLUniformBufferDescriptor;
-
-    get uniforms(): ReadonlyMap<number, Uniform> {
-        return this.descriptor.uniforms;
-    }
-
-    constructor(glBuffer: GLBuffer, offset: number, size: number, originData: ArrayBuffer, descriptor: WebGLUniformBufferDescriptor) {
+    constructor(name: string, uniformMap: Map<number, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>, mgr: WebGLBufferManager, data: ShaderData) {
         super();
-        this._buffer = glBuffer;
-        this.offset = offset;
-        this.size = size;
-        this._data = new Float32Array(originData, offset, size / 4);
+        this.name = name;
+        this.manager = mgr;
+        this.data = data;
+        this.uniformMap = uniformMap;
 
+        let descriptor = new WebGLUniformBufferDescriptor(name);
+        uniformMap.forEach(uniform => {
+            descriptor.addUniform(uniform.id, uniform.uniformtype, uniform.arrayLength);
+        });
+        descriptor.finish(this.manager.byteAlign / 4);
+        let bufferSize = descriptor.byteLength;
         this.descriptor = descriptor;
+
+        this.size = bufferSize;
+        this.bufferBlock = mgr.getBlock(bufferSize, this);
+        this.needUpload = true;
     }
 
-    upload() {
-        this._buffer.setDataEx(this._data, this.offset, this.size / this._data.BYTES_PER_ELEMENT);
+    clearGPUBufferBind(): void {
+        // throw new Error("Method not implemented.");
+    }
+    notifyGPUBufferChange(): void {
+
+        this.offset = this.bufferBlock.offset;
+        this.needUpload = true;
+
+        this.descriptor.uniforms.forEach(uniform => {
+
+            let size = uniform.viewByteLength / uniform.dataView.BYTES_PER_ELEMENT;
+            let offset = uniform.offset + this.bufferBlock.offset;
+
+            uniform.view = new uniform.dataView(this.bufferBlock.cluster.data, offset, size);
+        });
+        // this.needUpload = true;
+        this.bufferBlock.cluster.upload();
         this.needUpload = false;
     }
 
-    bind(location: number) {
-        this._buffer.bindBufferRange(location, this.offset, this.size);
-    }
-
-    destroy() {
-        this._buffer = null;
-        this._data = null;
-        this.offset = 0;
-        this.size = 0;
-
-        // todo 
-        // 释放空间
+    destroy(): void {
+        this.name = null;
+        this.data = null;
+        this.uniformMap = null;
+        this.descriptor.destroy();
+        this.descriptor = null;
+        this.manager.freeBlock(this.bufferBlock);
     }
 
 }

@@ -550,16 +550,18 @@ export class Material extends Resource implements IClone {
      */
     applyUniformDefaultValue(uniformMap: Map<number, UniformProperty>, defaultValue: Record<string, ShaderDataItem>) {
         uniformMap.forEach((uniform, key) => {
-            let type = uniform.uniformtype;
-            let uniformName = uniform.propertyName;
-            if (defaultValue && defaultValue[uniformName] != undefined) {
-                let value = defaultValue[uniformName];
-                this.setShaderData(uniformName, type, value);
-            }
-            else {
-                let value = ShaderDataDefaultValue(type);
-                if (value) {
-                    this.setShaderDataByIndex(key, type, value);
+            if (uniform.arrayLength <= 0) {
+                let type = uniform.uniformtype;
+                let uniformName = uniform.propertyName;
+                if (defaultValue && defaultValue[uniformName] != undefined) {
+                    let value = defaultValue[uniformName];
+                    this.setShaderData(uniformName, type, value);
+                }
+                else {
+                    let value = ShaderDataDefaultValue(type);
+                    if (value) {
+                        this.setShaderDataByIndex(key, type, value);
+                    }
                 }
             }
         });

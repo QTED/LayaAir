@@ -189,7 +189,7 @@ export class GLShaderInstance extends GLObject {
                 one.fun = this._uniformMatrix2fv;
                 break;
             case gl.FLOAT_MAT3:
-                one.fun = this._uniformMatrix3fv;
+                one.fun = isArray ? this._uniformMatrix3fv : this._uniformMatrix3f;
                 break;
             case gl.FLOAT_MAT4:
                 one.fun = isArray ? this._uniformMatrix4fv : this._uniformMatrix4f;
@@ -365,9 +365,15 @@ export class GLShaderInstance extends GLObject {
     /**
      * @internal
      */
+    _uniformMatrix3f(one: any, value: Matrix3x3): number {
+        this._gl.uniformMatrix3fv(one.location, false, value.elements);
+        return 1;
+    }
+
+    /**
+     * @internal
+     */
     _uniformMatrix3fv(one: any, value: Float32Array): number {
-        // let value = m.elements;
-        // todo no ubo no array item
         this._gl.uniformMatrix3fv(one.location, false, value);
         return 1;
     }
