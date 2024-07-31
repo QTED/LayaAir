@@ -1,6 +1,3 @@
-
-import { Config3D } from "../../../../Config3D";
-import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { ShaderPass } from "../../../RenderEngine/RenderShader/ShaderPass";
 import { SubShader } from "../../../RenderEngine/RenderShader/SubShader";
 import { Transform3D } from "../../../d3/core/Transform3D";
@@ -152,7 +149,7 @@ export class WebGLRenderElement3D implements IRenderElement3D {
             // to subshader has different uniform map
             // materialData.createUniformBuffer("Material", subShader._uniformMap);
 
-            let matSubBuffer = materialData.createSubBuffer("Material", subShader._uniformMap);
+            let matSubBuffer = materialData.createSubUniformBuffer("Material", subShader._uniformMap);
             if (matSubBuffer && matSubBuffer.needUpload) {
                 matSubBuffer.bufferBlock.needUpload();
             }
