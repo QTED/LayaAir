@@ -98,7 +98,7 @@ export class WebGLShaderData extends ShaderData {
 		return;
 	}
 
-	createSubBuffer(name: string, uniformMap: Map<number, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>) {
+	createSubUniformBuffer(name: string, uniformMap: Map<number, { id: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number }>) {
 		if (!Config3D._uniformBlock) {
 			return null;
 		}
