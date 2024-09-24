@@ -1,4 +1,3 @@
-
 import { CullMode } from "../../../RenderEngine/RenderEnum/CullMode";
 import { GLSLCodeGenerator } from "../../../RenderEngine/RenderShader/GLSLCodeGenerator";
 import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
@@ -7,7 +6,6 @@ import { ShaderVariable } from "../../../RenderEngine/RenderShader/ShaderVariabl
 import { RenderStateContext } from "../../../RenderEngine/RenderStateContext";
 import { CommandEncoder } from "../../../layagl/CommandEncoder";
 import { LayaGL } from "../../../layagl/LayaGL";
-import { Stat } from "../../../utils/Stat";
 import { ShaderCompileDefineBase, ShaderProcessInfo } from "../../../webgl/utils/ShaderCompileDefineBase";
 import { IShaderInstance } from "../../DriverDesign/RenderDevice/IShaderInstance";
 import { RenderState } from "../../RenderModuleData/Design/RenderState";

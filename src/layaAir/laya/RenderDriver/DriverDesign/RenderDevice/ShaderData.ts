@@ -1,5 +1,3 @@
-import { UnifromBufferData } from "../../../RenderEngine/UniformBufferData";
-import { UniformBufferObject } from "../../../RenderEngine/UniformBufferObject";
 import { Color } from "../../../maths/Color";
 import { Matrix3x3 } from "../../../maths/Matrix3x3";
 import { Matrix4x4 } from "../../../maths/Matrix4x4";
@@ -14,7 +12,6 @@ import { IDefineDatas } from "../../RenderModuleData/Design/IDefineDatas";
 import { ShaderDefine } from "../../RenderModuleData/Design/ShaderDefine";
 import { InternalTexture } from "./InternalTexture";
 
-export type uboParams = { ubo: UniformBufferObject; uboBuffer: UnifromBufferData };
 export enum ShaderDataType {
     None,
     Int,
@@ -72,23 +69,6 @@ export class ShaderData implements IClone {
     constructor(ownerResource: Resource = null) {
         this._ownerResource = ownerResource;
     }
-
-
-    /**
-     * @internal
-     * 增加一个UBO Block
-     * @param key 
-     * @param ubo 
-     * @param uboData 
-     */
-    _addCheckUBO(key: string, ubo: UniformBufferObject, uboData: UnifromBufferData) {
-        throw new Error("Method not implemented.");
-    }
-
-    _releaseUBOData() {
-        throw new Error("Method not implemented.");
-    }
-
 
     getDefineData(): IDefineDatas {
         throw new Error("Method not implemented.");
@@ -334,19 +314,6 @@ export class ShaderData implements IClone {
         throw new Error("Method not implemented.");
     }
 
-    /**
-     * 
-     * @param index 
-     * @param value 
-     */
-    setUniformBuffer(index: number, value: UniformBufferObject) {
-        throw new Error("Method not implemented.");
-    }
-
-    getUniformBuffer(index: number): UniformBufferObject {
-        throw new Error("Method not implemented.");
-    }
-
     setShaderData(uniformIndex: number, type: ShaderDataType, value: ShaderDataItem | Quaternion) {
         switch (type) {
             case ShaderDataType.Int:
@@ -433,15 +400,6 @@ export class ShaderData implements IClone {
      * @param	destObject 克隆源。
      */
     cloneTo(destObject: ShaderData): void {
-        throw new Error("Method not implemented.");
-    }
-
-    /**
-     * clone UBO Data
-     * @internal
-     * @param uboDatas 
-     */
-    _cloneUBO(uboDatas: Map<string, uboParams>) {
         throw new Error("Method not implemented.");
     }
 
