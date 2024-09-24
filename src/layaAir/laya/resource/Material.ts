@@ -3,7 +3,6 @@ import { Config3D } from "../../Config3D";
 import { ILaya } from "../../ILaya";
 import { BufferUsage } from "../RenderEngine/RenderEnum/BufferTargetType";
 import { Shader3D } from "../RenderEngine/RenderShader/Shader3D";
-import { UniformBufferObject } from "../RenderEngine/UniformBufferObject";
 import { LayaGL } from "../layagl/LayaGL";
 import { Color } from "../maths/Color";
 import { Matrix3x3 } from "../maths/Matrix3x3";
@@ -605,33 +604,11 @@ export class Material extends Resource implements IClone {
         this.destroyedImmediately = Config.destroyResourceImmediatelyDefault;
     }
 
-    private _bindShaderInfo(shader: Shader3D) {
-        //update UBOData by Shader
-        let subShader = shader.getSubShaderAt(0);//TODO	
-        // ubo
-        let shaderUBODatas = subShader._uniformBufferDataMap;
-        if (!shaderUBODatas)
-            return;
-        for (let key of shaderUBODatas.keys()) {
-            //create data
-            let uboData = shaderUBODatas.get(key).clone();
-            //create UBO
-            let ubo = UniformBufferObject.create(key, BufferUsage.Dynamic, uboData.getbyteLength(), false);
-            this._shaderValues.setUniformBuffer(Shader3D.propertyNameToID(key), ubo);
-            this._shaderValues._addCheckUBO(key, ubo, uboData);
-        }
-    }
-
-    private _releaseUBOData() {
-        this._shaderValues._releaseUBOData();
-    }
-
     /**
      * @en Destroys the resources.
      * @zh 销毁资源。
      */
     protected _disposeResource(): void {
-        this._releaseUBOData();
         this._shaderValues.destroy();
         this._shaderValues = null;
         this.ownerElements.clear();
@@ -667,13 +644,6 @@ export class Material extends Resource implements IClone {
             //throw new Error("Material: unknown shader name.");
             console.warn(`Material: unknown shader name '${name}'`);
             this._shader = Shader3D.find("BLINNPHONG");
-        }
-
-        if (Config3D._uniformBlock) {
-            this._releaseUBOData();
-            //bind shader info
-            // todo 清理残留 shader data
-            this._bindShaderInfo(this._shader);
         }
 
         // set default value

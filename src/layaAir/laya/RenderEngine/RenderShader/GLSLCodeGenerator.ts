@@ -95,6 +95,8 @@ export class GLSLCodeGenerator {
 
         // 拼接 shader attribute
         let useUniformBlock = Config3D._uniformBlock;
+        // todo 
+        useUniformBlock = false;
         let attributeglsl = GLSLCodeGenerator.glslAttributeString(attributeMap);
         let uniformglsl = GLSLCodeGenerator.glslUniformString(uniformMap, useUniformBlock);
 
