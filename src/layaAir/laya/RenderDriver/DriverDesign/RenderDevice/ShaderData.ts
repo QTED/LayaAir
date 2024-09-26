@@ -117,6 +117,13 @@ export class ShaderData implements IClone {
     }
 
     /**
+     * 清空数据 与 宏定义
+     */
+    clearData(): void {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
      * 获取布尔。
      * @param	index shader索引。
      * @return  布尔。
@@ -408,10 +415,6 @@ export class ShaderData implements IClone {
      * @return	 克隆副本。
      */
     clone(): any {
-        throw new Error("Method not implemented.");
-    }
-
-    reset() {
         throw new Error("Method not implemented.");
     }
 

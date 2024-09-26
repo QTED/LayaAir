@@ -78,15 +78,6 @@ export class NoRenderCommandUnifojrmMap extends CommandUniformMap {
     addShaderUniformArray(propertyID: number, propertyName: string, uniformtype: ShaderDataType, arrayLength: number, block: string = ""): void {
 
     } //兼容WGSL
-
-    /**
-     * 增加一个Uniform
-     * @param propertyID 
-     * @param propertyKey 
-     */
-    addShaderBlockUniform(propertyID: number, blockname: string, blockProperty: UniformProperty[]): void {
-
-    }
 }
 
 export class NoRenderShaderInstance implements IShaderInstance {
@@ -208,6 +199,10 @@ export class NoRenderShaderData extends ShaderData {
      * 清空宏定义。
      */
     clearDefine(): void {
+        this._defineDatas.clear();
+    }
+
+    clearData(): void {
 
     }
 
@@ -554,18 +549,6 @@ export class NoRenderShaderData extends ShaderData {
         var dest: NoRenderShaderData = new NoRenderShaderData();
         this.cloneTo(dest);
         return dest;
-    }
-
-    reset() {
-        for (var k in this._data) {
-            //维护Refrence
-            var value: any = this._data[k];
-            if (value instanceof Resource) {
-                value._removeReference();
-            }
-        }
-        this._data = {};
-        this._defineDatas.clear();
     }
 
     destroy(): void {

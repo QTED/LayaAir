@@ -77,7 +77,7 @@ export class Value2D {
         this.shaderData.setInt(Shader3D.BLEND_SRC, RenderState.BLENDPARAM_ONE);
         this.shaderData.setInt(Shader3D.BLEND_DST, RenderState.BLENDPARAM_ONE_MINUS_SRC_ALPHA);
         this.shaderData.setNumber(ShaderDefines2D.UNIFORM_VERTALPHA, 1.0);
-        this.shaderData.setInt(Shader3D.CULL,RenderState.CULL_NONE);
+        this.shaderData.setInt(Shader3D.CULL, RenderState.CULL_NONE);
     }
 
     reinit() {
@@ -258,7 +258,7 @@ export class Value2D {
     }
 
     clear(): void {
-        if(this.shaderData){
+        if (this.shaderData) {
             this.shaderData.clearDefine();
             //this.shaderData.destroy();
         }
