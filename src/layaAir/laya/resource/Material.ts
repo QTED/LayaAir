@@ -21,6 +21,7 @@ import { ShaderData, ShaderDataDefaultValue, ShaderDataItem, ShaderDataType } fr
 import { RenderState } from "../RenderDriver/RenderModuleData/Design/RenderState";
 import { IDefineDatas } from "../RenderDriver/RenderModuleData/Design/IDefineDatas";
 import { IRenderElement3D } from "../RenderDriver/DriverDesign/3DRenderPass/I3DRenderPass";
+import { UniformProperty } from "../RenderDriver/DriverDesign/RenderDevice/CommandUniformMap";
 
 
 /**
@@ -629,7 +630,7 @@ export class Material extends Resource implements IClone {
      * @returns uniform属性的映射表。
      */
     effectiveProperty() {
-        return this._shader.getSubShaderAt(0)._uniformTypeMap;
+        return this._shader.getSubShaderAt(0)._uniformMap;
     }
 
     /**
@@ -650,7 +651,7 @@ export class Material extends Resource implements IClone {
         // todo subShader 选择
         let subShader = this._shader.getSubShaderAt(0);
         let defaultValue = subShader._uniformDefaultValue;
-        let typeMap = subShader._uniformTypeMap;
+        let typeMap = subShader._uniformMap;
         this.applyUniformDefaultValue(typeMap, defaultValue);
         this._notifyOwnerElements();
     }
@@ -658,16 +659,21 @@ export class Material extends Resource implements IClone {
     /**
      * @internal
      */
-    applyUniformDefaultValue(typeMap: Map<string, ShaderDataType>, defaultValue: Record<string, ShaderDataItem>) {
-        typeMap.forEach((type, key) => {
-            if (defaultValue && defaultValue[key] != undefined) {
-                let value = defaultValue[key];
-                this.setShaderData(key, type, value);
-            }
-            else {
-                let value = ShaderDataDefaultValue(type);
-                if (value) {
-                    this.setShaderData(key, type, value);
+    applyUniformDefaultValue(uniformMap: Map<number, UniformProperty>, defaultValue: Record<string, ShaderDataItem>) {
+        uniformMap.forEach((uniform, id) => {
+
+            if (uniform.arrayLength <= 0) {
+                let type = uniform.uniformtype;
+                let uniformName = uniform.propertyName;
+                if (defaultValue && defaultValue[uniformName] != undefined) {
+                    let value = defaultValue[uniformName];
+                    this.setShaderData(uniformName, type, value);
+                }
+                else {
+                    let value = ShaderDataDefaultValue(type);
+                    if (value) {
+                        this.setShaderData(uniformName, type, value);
+                    }
                 }
             }
         });

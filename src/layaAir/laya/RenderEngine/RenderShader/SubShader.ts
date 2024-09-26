@@ -1,3 +1,4 @@
+import { UniformProperty } from "../../RenderDriver/DriverDesign/RenderDevice/CommandUniformMap";
 import { ShaderDataType, ShaderDataItem } from "../../RenderDriver/DriverDesign/RenderDevice/ShaderData";
 import { ISubshaderData } from "../../RenderDriver/RenderModuleData/Design/ISubShaderData";
 import { Shader3D } from "../../RenderEngine/RenderShader/Shader3D";
@@ -52,9 +53,6 @@ export class SubShader {
     /**@internal */
     _attributeMap: AttributeMapType;
 
-    /**@internal */
-    _uniformMap: UniformMapType;
-
     // todo uniform 相关信息统一用结构体存储？ 合并 value type map
     /**
      * @internal
@@ -65,7 +63,7 @@ export class SubShader {
      * @internal
      * uniform 数据类型
      */
-    readonly _uniformTypeMap: Map<string, ShaderDataType>;
+    readonly _uniformMap: Map<number, UniformProperty>;
 
     /**@internal */
     _owner: Shader3D;
@@ -84,19 +82,19 @@ export class SubShader {
     constructor(attributeMap: { [name: string]: [number, ShaderDataType] } = SubShader.DefaultAttributeMap, uniformMap: UniformMapType = {}, uniformDefaultValue: { [name: string]: ShaderDataItem } = null) {
         this.moduleData = LayaGL.unitRenderModuleDataFactory.createSubShader();
         this._attributeMap = attributeMap;
-        this._uniformMap = uniformMap;
         this._uniformDefaultValue = uniformDefaultValue;
-        this._uniformTypeMap = new Map();
+        this._uniformMap = new Map();
         for (const key in uniformMap) {
             if (typeof uniformMap[key] == "object") {
                 let block = <{ [uniformName: string]: ShaderDataType }>(uniformMap[key]);
                 for (const uniformName in block) {
-                    this._uniformTypeMap.set(uniformName, block[uniformName]);
+                    let uniformType = block[uniformName];
+                    this.addUniform(uniformName, uniformType);
                 }
             }
             else {
                 let unifromType = <ShaderDataType>uniformMap[key];
-                this._uniformTypeMap.set(key, unifromType);
+                this.addUniform(key, unifromType);
                 if (unifromType == ShaderDataType.Texture2D || unifromType == ShaderDataType.TextureCube || unifromType == ShaderDataType.Texture3D || unifromType == ShaderDataType.Texture2DArray) {
                     let textureGammaDefine = Shader3D.getDefineByName(`Gamma_${key}`);
                     let uniformIndex = Shader3D.propertyNameToID(key);
@@ -104,6 +102,29 @@ export class SubShader {
                 }
 
             }
+        }
+    }
+
+    private addUniform(name: string, type: ShaderDataType) {
+        let uniformName = name;
+        let arrayLength = getArrayLength(name);
+
+        if (arrayLength > 0) {
+            uniformName = name.substring(0, name.lastIndexOf('['));
+        }
+
+        let uniform: UniformProperty = {
+            id: Shader3D.propertyNameToID(uniformName),
+            propertyName: name,
+            uniformtype: type,
+            arrayLength: arrayLength
+        };
+
+        this._uniformMap.set(uniform.id, uniform);
+
+        if (type == ShaderDataType.Texture2D || type == ShaderDataType.TextureCube || type == ShaderDataType.Texture3D || type == ShaderDataType.Texture2DArray) {
+            let textureGammaDefine = Shader3D.getDefineByName(`Gamma_${name}`);
+            LayaGL.renderEngine.addTexGammaDefine(uniform.id, textureGammaDefine);
         }
     }
 
@@ -134,9 +155,8 @@ export class SubShader {
                 let bindtypeMap = includeBindInfo["uniformMap"];
                 let bindDefaultValue = includeBindInfo["defaultValue"];
                 for (var i in bindtypeMap) {
-                    if (!this._uniformTypeMap.has(i)) {
-                        this._uniformTypeMap.set(i, bindtypeMap[i]);
-                        this._uniformMap[i] = bindtypeMap[i];
+                    if (!this._uniformMap.has(Shader3D.propertyNameToID(i))) {
+                        this.addUniform(i, bindtypeMap[i]);
                     }
                 }
                 for (var i in bindDefaultValue) {
@@ -148,4 +168,19 @@ export class SubShader {
         }
     }
 
+}
+
+function getArrayLength(name: string): number {
+    let endPos = name.lastIndexOf(']');
+    let startPos = name.lastIndexOf('[');
+
+    if (startPos != -1 && endPos == name.length - 1) {
+        let arrayLengthStr = name.slice(startPos + 1, endPos);
+        let arrayLength = parseInt(arrayLengthStr);
+
+        if (!isNaN(arrayLength) && arrayLength > 0) {
+            return arrayLength;
+        }
+    }
+    return 0;
 }
