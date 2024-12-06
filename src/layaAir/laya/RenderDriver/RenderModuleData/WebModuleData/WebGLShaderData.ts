@@ -522,43 +522,33 @@ export class WebGLShaderData extends ShaderData {
 			if (value != null) {
 				if (typeof value == "number") {
 					destData[k] = value;
-				} else if (typeof value == "number") {
-					destData[k] = value;
 				} else if (typeof value == "boolean") {
 					destData[k] = value;
 				} else if (value instanceof Vector2) {
-					var v2 = destData[k] || (destData[k] = new Vector2());
-					(<Vector2>value).cloneTo(v2);
-					destData[k] = v2;
+					let v2 = destData[k] || (destData[k] = new Vector2());
+					value.cloneTo(<Vector2>v2);
 				} else if (value instanceof Vector3) {
-					var v3 = destData[k] || (destData[k] = new Vector3());
-					(<Vector3>value).cloneTo(v3);
-					destData[k] = v3;
+					let v3 = destData[k] || (destData[k] = new Vector3());
+					value.cloneTo(<Vector3>v3);
 				} else if (value instanceof Vector4) {
 					let color = this.getColor(parseInt(k));
 					if (color) {
 						let clonecolor = color.clone();
 						destObject.setColor(parseInt(k), clonecolor);
 					} else {
-						var v4 = destData[k] || (destData[k] = new Vector4());
-						(<Vector4>value).cloneTo(v4);
-						destData[k] = v4;
+						let v4 = destData[k] || (destData[k] = new Vector4());
+						value.cloneTo(<Vector4>v4);
 					}
 				}
 				else if (value instanceof Matrix3x3) {
 					let mat = destData[k] || (destData[k] = new Matrix3x3());
-					value.cloneTo(mat);
-					destData[k] = mat;
+					value.cloneTo(<Matrix3x3>mat);
 				}
 				else if (value instanceof Matrix4x4) {
-					var mat = destData[k] || (destData[k] = new Matrix4x4());
-					(<Matrix4x4>value).cloneTo(mat);
-					destData[k] = mat;
-				} else if (value instanceof BaseTexture) {
-					destData[k] = value;
-					value._addReference();
+					let mat = destData[k] || (destData[k] = new Matrix4x4());
+					value.cloneTo(<Matrix4x4>mat);
 				} else if (value instanceof Resource) {
-					destData[k] = value as any;
+					destData[k] = value;
 					value._addReference();
 				}
 			}

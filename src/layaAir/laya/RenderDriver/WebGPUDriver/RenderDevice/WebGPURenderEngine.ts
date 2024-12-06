@@ -14,6 +14,7 @@ import { WebGPURenderEngineFactory } from "./WebGPURenderEngineFactory";
 import { WebGPUTextureContext, WebGPUTextureFormat } from "./WebGPUTextureContext";
 import { WebGPUGlobal } from "./WebGPUStatis/WebGPUGlobal";
 import { GPUEngineStatisticsInfo } from "../../../RenderEngine/RenderEnum/RenderStatInfo";
+import { NotImplementedError } from "../../../utils/Error";
 import { WebGPUTimingManager } from "./WebGPUTimingManager";
 import { Laya } from "../../../../Laya";
 
@@ -198,12 +199,12 @@ export class WebGPURenderEngine implements IRenderEngine {
             })
             .then((device: GPUDevice) => {
                 this._initDevice(device);
+                //console.log('WebGPU start');
                 return Promise.resolve();
-            },
-                (e) => {
-                    console.log(e);
-                    throw 'Could not get WebGPU device';
-                })
+            }, (e) => {
+                console.log(e);
+                throw 'Could not get WebGPU device';
+            })
     }
 
     /**
@@ -218,7 +219,7 @@ export class WebGPURenderEngine implements IRenderEngine {
         if (!this._screenRT
             || this._screenRT._textures[0].width !== w
             || this._screenRT._textures[0].height !== h) {
-            console.log('canvas resize =', w, h);
+            //console.log('canvas resize =', w, h);
             this.createScreenRT();
         }
     }
@@ -262,8 +263,8 @@ export class WebGPURenderEngine implements IRenderEngine {
         this._context = this._canvas.getContext('webgpu') as GPUCanvasContext;
         if (!this._context)
             throw 'Could not get context';
-        const preferredFormat = navigator.gpu.getPreferredCanvasFormat();
-        console.log('preferredFormat =', preferredFormat);
+        //const preferredFormat = navigator.gpu.getPreferredCanvasFormat();
+        //console.log('preferredFormat =', preferredFormat);
         const format = this._config.swapChainFormat || WebGPUTextureFormat.bgra8unorm;
         const usage = this._config.usage ?? GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC;
         this._context.configure({
@@ -287,7 +288,7 @@ export class WebGPURenderEngine implements IRenderEngine {
     }
 
     copySubFrameBuffertoTex(texture: InternalTexture, level: number, xoffset: number, yoffset: number, x: number, y: number, width: number, height: number): void {
-        throw new Error('Method not implemented.');
+        throw new NotImplementedError;
     }
 
     /**@internal */

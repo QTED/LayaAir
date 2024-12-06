@@ -5,6 +5,7 @@ import { Color } from "../maths/Color";
 import { LayaGL } from "../layagl/LayaGL";
 import { InternalRenderTarget } from "../RenderDriver/DriverDesign/RenderDevice/InternalRenderTarget";
 import { IRenderTarget } from "../RenderDriver/DriverDesign/RenderDevice/IRenderTarget";
+import { NotImplementedError } from "../utils/Error";
 /**
  * @en RenderTexture2D class used to create 2D render targets.
  * @zh RenderTexture2D 类用于创建2D渲染目标。
@@ -64,6 +65,14 @@ export class RenderTexture2D extends BaseTexture implements IRenderTarget {
      */
     getIsReady(): boolean {
         return true;
+    }
+
+    /**
+     * @en get the colorFormat from RenderInternalRT
+     * @zh 得到此渲染纹理的颜色格式
+     */
+    getColorFormat(): RenderTargetFormat {
+        return this._colorFormat;
     }
 
     /**
@@ -168,14 +177,14 @@ export class RenderTexture2D extends BaseTexture implements IRenderTarget {
      * @internal
      */
     _start(): void {
-        throw new Error("Method not implemented.");
+        throw new NotImplementedError();
     }
 
     /**
      * @internal
      */
     _end(): void {
-        throw new Error("Method not implemented.");
+        throw new NotImplementedError();
     }
 
     /**
@@ -223,7 +232,41 @@ export class RenderTexture2D extends BaseTexture implements IRenderTarget {
      * @returns 指定区域的像素数据。
      */
     getData(x: number, y: number, width: number, height: number): ArrayBufferView {
-        return LayaGL.textureContext.getRenderTextureData(this._renderTarget, x, y, width, height);
+        const pixelCount = width * height * 4;
+        let pixelArray: ArrayBufferView;
+        switch (this._renderTarget.colorFormat) {
+            case RenderTargetFormat.R8G8B8:
+            case RenderTargetFormat.R8G8B8A8:
+                pixelArray = new Uint8Array(pixelCount);
+                break;
+            case RenderTargetFormat.R16G16B16A16:
+                pixelArray = new Float32Array(pixelCount);
+                break;
+            default:
+                throw "this function is not surpprt " + this._renderTarget.colorFormat.toString() + "format Material";
+        }
+        LayaGL.textureContext.readRenderTargetPixelData(this._renderTarget, x, y, width, height, pixelArray);
+        return pixelArray;
+    }
+
+    /**
+     * @en Asynchronously retrieves pixel data from the RenderTexture.
+     * @param xOffset The x-offset value.
+     * @param yOffset The y-offset value.
+     * @param width The width of the area to retrieve.
+     * @param height The height of the area to retrieve.
+     * @param out The array to hold the output data.
+     * @returns binary data
+     * @zh 异步获取渲染纹理的像素数据。
+     * @param xOffset x偏移值
+     * @param yOffset y偏移值
+     * @param width 要检索的区域的宽度。
+     * @param height 要检索的区域的高度。
+     * @param out 用于保存输出数据的数组。
+     * @returns 二进制数据
+     */
+    getDataAsync(xOffset: number, yOffset: number, width: number, height: number, out: Uint8Array | Float32Array) { //兼容WGSL
+        return LayaGL.textureContext.readRenderTargetPixelDataAsync(this._renderTarget, xOffset, yOffset, width, height, out);
     }
 
     /**
@@ -232,7 +275,6 @@ export class RenderTexture2D extends BaseTexture implements IRenderTarget {
      * @zh 回收渲染纹理。
      */
     recycle(): void {
-
     }
 
     /**

@@ -4,6 +4,7 @@ import { BufferUsage } from "../../../RenderEngine/RenderEnum/BufferTargetType";
 import { VertexMesh } from "../../../RenderEngine/RenderShader/VertexMesh";
 import { VertexDeclaration } from "../../../RenderEngine/VertexDeclaration";
 import { LayaGL } from "../../../layagl/LayaGL";
+import { NotImplementedError } from "../../../utils/Error";
 import { IRenderEngineFactory } from "../../DriverDesign/RenderDevice/IRenderEngineFactory";
 import { GLESEngine, GLESMode } from "./GLESEngine";
 

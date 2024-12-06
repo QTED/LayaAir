@@ -3,7 +3,6 @@ import { MeshTopology } from "../../RenderEngine/RenderEnum/RenderPologyMode";
 import { IndexFormat } from "../../RenderEngine/RenderEnum/IndexFormat";
 import { DrawType } from "../../RenderEngine/RenderEnum/DrawType";
 import { BufferState } from "../../webgl/utils/BufferState";
-import { Laya3DRender } from "../RenderObjs/Laya3DRender";
 import { IRenderGeometryElement } from "../../RenderDriver/DriverDesign/RenderDevice/IRenderGeometryElement";
 import { LayaGL } from "../../layagl/LayaGL";
 
@@ -138,7 +137,7 @@ export class GeometryElement {
      * @zh 获取几何体类型
      */
 	_getType(): number {
-		throw "GeometryElement:must override it.";
+		throw new Error("GeometryElement:must override it.");
 	}
 
     /**
@@ -162,7 +161,7 @@ export class GeometryElement {
 	 * @param state 渲染上下文。
      */
 	_updateRenderParams(state: RenderContext3D): void {
-		throw "GeometryElement:must override it.";
+		throw new Error("GeometryElement:must override it.");
 	}
 
     /**

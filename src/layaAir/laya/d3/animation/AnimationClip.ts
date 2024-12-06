@@ -2,24 +2,24 @@ import { AnimationClipParser03 } from "./AnimationClipParser03";
 import { AnimationClipParser04 } from "./AnimationClipParser04";
 import { KeyframeNodeList } from "./KeyframeNodeList";
 import { AnimationEvent } from "./AnimationEvent";
-import { FloatKeyframe } from "../core/FloatKeyframe"
-import { QuaternionKeyframe } from "../core/QuaternionKeyframe"
-import { Vector3Keyframe } from "../core/Vector3Keyframe"
 import { Utils3D } from "../utils/Utils3D"
 import { Resource } from "../../resource/Resource"
 import { Byte } from "../../utils/Byte"
 import { Handler } from "../../utils/Handler"
 import { ILaya } from "../../../ILaya";
-import { WeightedMode } from "../core/Keyframe";
 import { Loader } from "../../net/Loader";
-import { Vector2Keyframe } from "../core/Vector2Keyframe";
-import { Vector4Keyframe } from "../core/Vector4Keyframe";
 import { AvatarMask } from "../component/Animator/AvatarMask";
 import { KeyFrameValueType } from "../component/Animator/KeyframeNodeOwner";
 import { Quaternion } from "../../maths/Quaternion";
 import { Vector2 } from "../../maths/Vector2";
 import { Vector3 } from "../../maths/Vector3";
 import { Vector4 } from "../../maths/Vector4";
+import { FloatKeyframe } from "../../maths/FloatKeyframe";
+import { WeightedMode } from "../../maths/Keyframe";
+import { QuaternionKeyframe } from "../../maths/QuaternionKeyframe";
+import { Vector2Keyframe } from "../../maths/Vector2Keyframe";
+import { Vector3Keyframe } from "../../maths/Vector3Keyframe";
+import { Vector4Keyframe } from "../../maths/Vector4Keyframe";
 
 /**
  * @en The AnimationClip class is used for animation clip resources.
@@ -53,7 +53,7 @@ export class AnimationClip extends Resource {
 				AnimationClipParser04.parse(clip, reader, version);
 				break;
 			default:
-				throw "unknown animationClip version.";
+				throw new Error("unknown animationClip version.");
 		}
 		return clip;
 	}
@@ -551,9 +551,8 @@ export class AnimationClip extends Resource {
 						v4Data.w -= v4FrameValue.w;
 					}
 					break;
-					break;
 				default:
-					throw "AnimationClip:unknown node type.";
+					throw new Error("AnimationClip:unknown node type.");
 			}
 		}
 	}

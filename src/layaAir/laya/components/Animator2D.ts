@@ -194,6 +194,12 @@ export class Animator2D extends Component {
                         ret.pro = { ower: pobj, key: pname, defVal: pobj ? pobj[pname] : null }
                         break;
                     }
+                    if ('_gcmds' === pname && null == pobj[pname] && pobj.graphics) {
+                        //对于_gcmds属性的特殊处理
+                        pobj = pobj.graphics;
+                        pname = "cmds";
+                    }
+
 
                     if (null == pobj[pname] && property == pobj) {
                         //有可能是组件,查找组件逻辑
@@ -354,6 +360,8 @@ export class Animator2D extends Component {
         let clipDuration = clip!._duration;
         let time = playStateInfo._normalizedPlayTime * clipDuration;
         let frontPlay = playStateInfo._frontPlay;
+        const speed = playStateInfo._currentState.speed;
+        if (0 > speed) frontPlay = !frontPlay;
         let pTime = playStateInfo._parentPlayTime;
         let parentPlayTime = playStateInfo._parentPlayTime;
         if (null == parentPlayTime) {
@@ -365,12 +373,16 @@ export class Animator2D extends Component {
         }
         if (frontPlay) {
             if (time < parentPlayTime) {
-                this._eventScript(events, parentPlayTime, clipDuration * playStateInfo.animatorState.clipEnd, frontPlay);
+                //这里应该是YOYO的开始位置
+                this._eventScript(events, parentPlayTime, time, true);
+                //this._eventScript(events, parentPlayTime, clipDuration * playStateInfo.animatorState.clipEnd, frontPlay);
                 parentPlayTime = clipDuration * playStateInfo.animatorState.clipStart;
             }
         } else {
             if (time > parentPlayTime) {
-                this._eventScript(events, parentPlayTime, clipDuration * playStateInfo.animatorState.clipStart, frontPlay);
+                //这里应该是YOYO的一半结束位置
+                this._eventScript(events, parentPlayTime, time, false);
+                //this._eventScript(events, parentPlayTime, clipDuration * playStateInfo.animatorState.clipStart, frontPlay);
                 parentPlayTime = clipDuration * playStateInfo.animatorState.clipEnd;
             }
         }
@@ -514,6 +526,17 @@ export class Animator2D extends Component {
             if (1 < normalizedTime) normalizedTime = 1;
             this.gotoAndStop(name, layerIndex, normalizedTime);
         }
+    }
+    /**
+     * @en Gets the controller layer.
+     * @param layerIndex The layer index. Defaults to 0.
+     * @returns The AnimatorControllerLayer at the specified index.
+     * @zh 获取控制器层。
+     * @param	layerIndex 层索引。
+     * @return 指定索引处的AnimatorControllerLayer。
+     */
+    getControllerLayer(layerInex: number = 0): AnimatorControllerLayer2D {
+        return this._controllerLayers[layerInex];
     }
 
     /**

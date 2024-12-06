@@ -5,6 +5,8 @@ import { Color } from "../../../maths/Color";
 import { Viewport } from "../../../maths/Viewport";
 import { FastSinglelist } from "../../../utils/SingletonList";
 import { IRenderContext2D } from "../../DriverDesign/2DRenderPass/IRenderContext2D";
+import { IRenderCMD } from "../../DriverDesign/RenderDevice/IRenderCMD";
+import { InternalRenderTarget } from "../../DriverDesign/RenderDevice/InternalRenderTarget";
 import { WebDefineDatas } from "../../RenderModuleData/WebModuleData/WebDefineDatas";
 import { WebGPUContext } from "../3DRenderPass/WebGPUContext";
 import { WebGPUInternalRT } from "../RenderDevice/WebGPUInternalRT";
@@ -41,6 +43,9 @@ export class WebGPURenderContext2D implements IRenderContext2D {
         this._globalConfigShaderData = Shader3D._configDefineValues;
         this._clearColor = new Color();
         this._viewport = new Viewport();
+    }
+    getRenderTarget(): InternalRenderTarget {
+        return this.destRT;
     }
 
     drawRenderElementList(list: FastSinglelist<WebGPURenderElement2D>): number {
@@ -93,6 +98,14 @@ export class WebGPURenderContext2D implements IRenderContext2D {
         node.prepare(this);
         node.render(this, this.renderCommand);
         this._submit();
+    }
+
+    runOneCMD(cmd: IRenderCMD): void {
+        cmd.apply(this);
+    }
+
+    runCMDList(cmds: IRenderCMD[]): void {
+        cmds.forEach(cmd => cmd.apply(this));
     }
 
     /**

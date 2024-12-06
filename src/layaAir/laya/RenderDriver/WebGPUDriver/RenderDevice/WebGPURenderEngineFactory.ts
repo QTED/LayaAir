@@ -1,6 +1,7 @@
 import { Config } from "../../../../Config";
 import { Laya } from "../../../../Laya";
 import { LayaGL } from "../../../layagl/LayaGL";
+import { NotImplementedError } from "../../../utils/Error";
 import { IRenderEngineFactory } from "../../DriverDesign/RenderDevice/IRenderEngineFactory";
 import { WebGPUCodeGenerator } from "./WebGPUCodeGenerator";
 import { WebGPUConfig, WebGPURenderEngine } from "./WebGPURenderEngine";
@@ -19,6 +20,7 @@ export class WebGPURenderEngineFactory implements IRenderEngineFactory {
                 gpuConfig.powerPreference = Config.powerPreference;
                 break;
         }
+        //@ts-ignore
         // todo add required features
         gpuConfig.deviceDescriptor.requiredFeatures = [
             // "texture-compression-astc",

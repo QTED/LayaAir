@@ -2,7 +2,8 @@ import { IClone } from "../../utils/IClone";
 
 
 /**
- * create Recast navMesh Config
+ * @en create Recast navMesh Config
+ * @zh 创建Recast navMesh配置
  */
 export class RecastConfig implements IClone {
 
@@ -68,15 +69,14 @@ export class RecastConfig implements IClone {
     * 克隆。
     * @param	destObject 克隆源。
     */
-    cloneTo(destObject: any): void {
-        var data: RecastConfig = (<RecastConfig>destObject);
-        data.agentName = this.agentName;
-        data.cellSize = this.cellSize;
-        data.cellHeight = this.cellHeight;
-        data.agentMaxSlope = this.agentMaxSlope;
-        data.agentHeight = this.agentHeight;
-        data.agentMaxClimb = this.agentMaxClimb;
-        data.agentRadius = this.agentRadius;
-        data.tileSize = this.tileSize;
+    cloneTo(destObject: RecastConfig): void {
+        destObject.agentName = this.agentName;
+        destObject.cellSize = this.cellSize;
+        destObject.cellHeight = this.cellHeight;
+        destObject.agentMaxSlope = this.agentMaxSlope;
+        destObject.agentHeight = this.agentHeight;
+        destObject.agentMaxClimb = this.agentMaxClimb;
+        destObject.agentRadius = this.agentRadius;
+        destObject.tileSize = this.tileSize;
     }
 }

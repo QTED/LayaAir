@@ -6,14 +6,22 @@ import { Handler } from "../utils/Handler"
 import { Timer } from "../utils/Timer"
 import { ILaya } from "../../ILaya";
 import { Prefab } from "../resource/HierarchyResource";
-import { LegacyUIParser } from "../loaders/LegacyUIParser";
 import { NodeFlags } from "../Const";
 import { Context } from "../renders/Context";
 import { CommandUniformMap } from "../RenderDriver/DriverDesign/RenderDevice/CommandUniformMap";
 import { Scene2DSpecialManager } from "./Scene2DSpecial/Scene2DSpecialManager";
 import { Render2DSimple } from "../renders/Render2D";
 import { Laya, stage } from "../../Laya";
-import { Light2DManager } from "./Scene2DSpecial/Light2D/Light2DManager";
+import { BaseRenderNode2D } from "../NodeRender2D/BaseRenderNode2D";
+import { HierarchyLoader } from "../loaders/HierarchyLoader";
+
+export interface ILight2DManager {
+    preRenderUpdate(context: Context): void;
+    addRender(node: BaseRenderNode2D): void;
+    removeRender(node: BaseRenderNode2D): void;
+    _getLayerUpdateMark(layer: number): number;
+    _updateShaderDataByLayer(layer: number, shaderData: any): void;
+}
 
 /**
  * @en Scene class, responsible for scene creation, loading, destruction and other functions.
@@ -31,9 +39,11 @@ export class Scene extends Sprite {
      * @zh 创建后还未被销毁的场景列表。此属性只读，请不要直接修改。用于方便查看未销毁的场景列表，便于内存管理。
      */
     static readonly unDestroyedScenes: Set<Scene> = new Set();
-    /**获取根节点*/
+    /**
+     * @en Get the root node
+     * @zh 获取根节点
+     * */
     private static _root: Sprite;
-    /**@private */
     private static _loadPage: Sprite;
 
     /**@private 场景组件管理表 */
@@ -60,23 +70,26 @@ export class Scene extends Sprite {
      */
     _scene3D: any;
 
+
+
     /**
-     * @private
-     * @internal 
-     * 相对布局组件
+     * @en relative layout component
+     * @zh 相对布局组件
      */
     protected _widget: Widget;
 
-    /**场景时钟*/
+    /**
+     * @en The scene clock
+     * @zh 场景时钟
+     */
     private _timer: Timer;
-    /**@private */
     private _viewCreated: boolean = false;
 
     /** @internal */
     private _componentElementDatasMap: any = {};
 
     _specialManager: Scene2DSpecialManager;
-    _light2DManager: Light2DManager;
+    _light2DManager: ILight2DManager;
 
     constructor(createChildren = true) {
         super();
@@ -84,14 +97,15 @@ export class Scene extends Sprite {
         this._timer = ILaya.timer;
         this._widget = Widget.EMPTY;
 
-        this._light2DManager = new Light2DManager(this);
+        //this._light2DManager = new Light2DManager(this);
+        //this._light2DManager.enableNormal = true;
 
         this._scene = this;
         if (createChildren)
             this.createChildren();
         Scene.componentManagerMap.forEach((val, key) => {
             let cla: any = val;
-            this._specialManager.componentElementMap.set(key, new cla());
+            this._specialManager.componentElementMap.set(key, new cla(this));
         });
     }
 
@@ -117,9 +131,9 @@ export class Scene extends Sprite {
     }
 
     /**
-   * 获得某个组件的管理器
-   * @param type 组件管理类
-   */
+     * 获得某个组件的管理器
+     * @param type 组件管理类
+     */
     getComponentElementManager(type: string) {
         return this._specialManager.componentElementMap.get(type);
     }
@@ -148,7 +162,7 @@ export class Scene extends Sprite {
     }
 
     /**
-     * @private
+     * @ignore
      * @en Load scene view. Used for loading mode. Compatible with old projects.
      * @param path The scene address.
      * @zh 装载场景视图。用于加载模式。兼容老项目。
@@ -185,7 +199,7 @@ export class Scene extends Sprite {
     }
 
     /**
-     * @private
+     * @ignore
      * @en Create view using view data. Compatible with old projects.
      * @param view The view data information.
      * @zh 通过视图数据创建视图。兼容老项目。
@@ -194,7 +208,7 @@ export class Scene extends Sprite {
     createView(view: any): void {
         if (view && !this._viewCreated) {
             this._viewCreated = true;
-            LegacyUIParser.createByData(this, view);
+            HierarchyLoader.legacySceneOrPrefab.createByData(this, view);
         }
     }
 
@@ -265,8 +279,6 @@ export class Scene extends Sprite {
     }
 
     /**
-     * @inheritDoc 
-     * @override
      * @en Destroy the scene.
      * @param destroyChild Whether to delete child nodes.
      * @zh 场景销毁。
@@ -285,8 +297,6 @@ export class Scene extends Sprite {
 
     /**
      * @internal
-     * @inheritDoc 
-     * @override
      * @en Get the width of the scene.
      * @zh 获取场景的宽度。
      */
@@ -304,8 +314,6 @@ export class Scene extends Sprite {
 
     /**
      * @internal
-     * @inheritDoc 
-     * @override
      * @en Get the height of the scene.
      * @zh 获取场景的高度。
      */
@@ -322,7 +330,6 @@ export class Scene extends Sprite {
     }
 
     /**
-     * @override
      * @en Scene clock
      * @zh 场景时钟
      */
@@ -440,6 +447,14 @@ export class Scene extends Sprite {
     }
 
     /**
+     * @en Gets shader data from scene's manager
+     * @zh 获取场景的着色器数据
+     */
+    get sceneShaderData() {
+        return this._specialManager._shaderData;
+    }
+ 
+    /**
      * @internal
      * @param ctx 
      * @param x 
@@ -452,13 +467,16 @@ export class Scene extends Sprite {
         if (this._light2DManager)
             this._light2DManager.preRenderUpdate(ctx);
     }
-
+ 
     /**
      * @internal
      * @param ctx 
      */
     _recoverRenderSceneState(ctx: Context) {
         //恢复2D场景数据状态
+        if (!ctx._render2DManager._renderEnd) {
+            ctx._render2DManager.render(Render2DSimple.rendercontext2D);
+        }
         ctx.drawLeftData();
         Render2DSimple.rendercontext2D.sceneData = null;
     }
@@ -475,11 +493,6 @@ export class Scene extends Sprite {
         this.callLater(this._sizeChanged);
     }
 
-    /**
-     * @internal
-     * @private 
-     * @override
-    */
     protected _sizeChanged(): void {
         this.event(Event.RESIZE);
         if (this._widget !== Widget.EMPTY) this._widget.resetLayout();
@@ -511,8 +524,8 @@ export class Scene extends Sprite {
     }
 
     /**
-     * @private
-     * 获取对象的布局样式。请不要直接修改此对象
+     * @en Get the layout style of the object. Please do not directly modify this object
+     * @zh 获取对象的布局样式。请不要直接修改此对象
      */
     private _getWidget(): Widget {
         this._widget === Widget.EMPTY && (this._widget = this.addComponent(Widget));
@@ -609,7 +622,6 @@ export class Scene extends Sprite {
         return Scene.load(url, Handler.create(null, this._onSceneLoaded, [closeOther, complete, param]), progress);
     }
 
-    /**@private */
     private static _onSceneLoaded(closeOther: boolean, complete: Handler, param: any, scene: Scene): void {
         scene.open(closeOther, param);
         if (complete) complete.runWith(scene);

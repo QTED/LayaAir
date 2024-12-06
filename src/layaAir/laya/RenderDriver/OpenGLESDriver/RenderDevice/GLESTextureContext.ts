@@ -6,7 +6,6 @@ import { TextureCompareMode } from "../../../RenderEngine/RenderEnum/TextureComp
 import { TextureDimension } from "../../../RenderEngine/RenderEnum/TextureDimension";
 import { TextureFormat } from "../../../RenderEngine/RenderEnum/TextureFormat";
 import { ITextureContext } from "../../DriverDesign/RenderDevice/ITextureContext";
-import { InternalTexture } from "../../DriverDesign/RenderDevice/InternalTexture";
 import { GLESInternalRT } from "./GLESInternalRT";
 import { GLESInternalTex } from "./GLESInternalTex";
 
@@ -160,9 +159,5 @@ export class GLESTextureContext implements ITextureContext {
 
     updateVideoTexture(texture: GLESInternalTex, video: HTMLVideoElement, premultiplyAlpha: boolean, invertY: boolean): void {
         this._native.updateVideoTexture(texture._nativeObj, (video as any)._nativeObj.conchImgId, premultiplyAlpha, invertY);
-    }
-
-    getRenderTextureData(internalTex: GLESInternalRT, x: number, y: number, width: number, height: number): ArrayBufferView {
-        return this._native.getRenderTextureData(internalTex._nativeObj, x, y, width, height);
     }
 }

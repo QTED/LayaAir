@@ -16,8 +16,7 @@ import { Render2DSimple } from "./Render2D";
 import { SpriteCache } from "./SpriteCache";
 
 /**
- * @private
- * 
+ * @ignore
  */
 export interface _RenderFunction {
     (sp: Sprite, ctx: Context, x: number, y: number): void;
@@ -25,8 +24,9 @@ export interface _RenderFunction {
 
 const INIT = 0x11111;
 /**
- * @private
- * 精灵渲染器
+ * @ignore
+ * @en Sprite renderer.
+ * @zh 精灵渲染器
  */
 export class RenderSprite {
     /** @private*/
@@ -159,7 +159,7 @@ export class RenderSprite {
         let next = this._next;
         if (next == RenderSprite.NORENDER) return;
 
-        if (sprite._getBit(NodeFlags.DISABLE_INNER_CLIPPING)) {
+        if (sprite._getBit(NodeFlags.DISABLE_INNER_CLIPPING) && !context._drawingToTexture) {
             next._fun(sprite, context, x, y);
             return;
         }
@@ -215,7 +215,7 @@ export class RenderSprite {
 
     /**@internal IDE only*/
     _hitarea(sprite: Sprite, context: Context, x: number, y: number): void {
-        if (sprite.hitArea) {
+        if (!context._drawingToTexture && sprite.hitArea) {
             var style = sprite._style;
             var g = (<HitArea>sprite.hitArea)._hit;
             var temp = context.globalAlpha;
@@ -265,6 +265,7 @@ export class RenderSprite {
         x = x - sprite.pivotX;
         y = y - sprite.pivotY;
         let textLastRender: boolean = sprite._getBit(NodeFlags.DRAWCALL_OPTIMIZE) && context.drawCallOptimize(true);
+        let drawingToTexture = context._drawingToTexture;
         let rect: Rectangle;
         let left: number, top: number, right: number, bottom: number, x2: number, y2: number;
 
@@ -278,7 +279,11 @@ export class RenderSprite {
 
         for (let i = 0; i < n; ++i) {
             let ele = childs[i];
-            let visFlag = ele._visible || ele._getBit(NodeFlags.DISABLE_VISIBILITY);
+            let visFlag: boolean;
+            if (drawingToTexture)
+                visFlag = ele._visible && !ele._getBit(NodeFlags.ESCAPE_DRAWING_TO_TEXTURE);
+            else
+                visFlag = ele._visible || ele._getBit(NodeFlags.DISABLE_VISIBILITY);
             if (visFlag) {
                 if (rect && ((x2 = ele._x) >= right || (x2 + ele.width) <= left || (y2 = ele._y) >= bottom || (y2 + ele.height) <= top))
                     visFlag = false;
@@ -303,7 +308,7 @@ export class RenderSprite {
      * @param context 
      * @returns 
      */
-    _renderNextToCacheRT(sprite: Sprite, context: Context) {
+    _renderNextToCacheRT(sprite: Sprite, context: Context,marginLeft=0,marginTop=0,marginRight=0,marginBottom=0) {
         var _cacheStyle = sprite._getCacheStyle();
         if (sprite._needRepaint() || !_cacheStyle.renderTexture || ILaya.stage.isGlobalRepaint()) {
             if (_cacheStyle.renderTexture) {
@@ -312,8 +317,9 @@ export class RenderSprite {
             //如果需要构造RenderTexture
             // 先计算需要的texuture的大小。
             let scaleInfo = sprite._cacheStyle._calculateCacheRect(sprite, "bitmap"/*sprite._cacheStyle.cacheAs*/, 0, 0);
+            //tRec相当于贴图在sprite坐标系下的位置
             let tRec = _cacheStyle.cacheRect;
-            if (tRec.width <= 0 || tRec.height <= 0){
+            if (tRec.width <= 0 || tRec.height <= 0) {
                 //什么也没渲染，注意设置rt为null，后面会判断
                 _cacheStyle.renderTexture = null;
                 return false;
@@ -321,8 +327,8 @@ export class RenderSprite {
             //计算cache画布的大小
             Stat.canvasBitmap++;
 
-            let w = tRec.width * scaleInfo.x;  //,
-            let h = tRec.height * scaleInfo.y;
+            let w = tRec.width * scaleInfo.x+marginLeft+marginRight;  //,
+            let h = tRec.height * scaleInfo.y+marginTop+marginBottom;
             let rt = new RenderTexture2D(w, h, RenderTargetFormat.R8G8B8A8);
             let ctx = new Context();
             ctx.copyState(context);
@@ -337,6 +343,8 @@ export class RenderSprite {
                 所以为了rt能正确的包含节点的渲染效果，应该偏移一下节点再渲染，具体就是取节点在rt坐标系下的值
                 当使用这个rt的时候，要反向偏移，即偏移rt在节点坐标系下的值
             */
+            tRec.x -= marginLeft;   //margin要算到偏移中
+            tRec.y -= marginTop;
             this._next._fun(sprite, ctx, -tRec.x, -tRec.y);
             ctx.endRender();
             //临时，恢复
@@ -353,7 +361,7 @@ export class RenderSprite {
         var _cacheStyle = sprite._cacheStyle;
         var _next = this._next;
 
-        if (_cacheStyle.mask && _cacheStyle.mask._getBit(NodeFlags.DISABLE_VISIBILITY)) {
+        if (!context._drawingToTexture && _cacheStyle.mask && _cacheStyle.mask._getBit(NodeFlags.DISABLE_VISIBILITY)) {
             //虽然有mask但是mask不可见，则不走这个流程。
             _next._fun(sprite, context, x, y);
             return;
@@ -381,13 +389,31 @@ export class RenderSprite {
         }
     }
 
-    //use Render Rect
+    /**
+     * @en Renders a sprite to a RenderTexture2D. Determines the render target based on the provided parameters. If a render texture is provided, it uses that. Otherwise, it creates a new one based on the sprite's cache rect and other factors. Optionally, can draw a render rectangle based on the isDrawRenderRect parameter.
+     * @param sprite The sprite to be rendered.
+     * @param context The context for rendering.
+     * @param x The x-coordinate for rendering.
+     * @param y The y-coordinate for rendering.
+     * @param renderTexture The optional RenderTexture2D to render to. If not provided, a new one will be created if needed.
+     * @param isDrawRenderRect A boolean indicating whether to draw the render rectangle. When true, it starts drawing from (0,0) of the render texture and subtracts the offset of the cache rectangle. When false, it keeps the sprite's original relative position for drawing.
+     * @returns The RenderTexture2D that the sprite is rendered to.
+     * @zh 将一个精灵渲染到一个渲染纹理上。根据提供的参数确定渲染目标。如果提供了渲染纹理，则使用该纹理。否则，根据精灵的缓存矩形和其他因素创建一个新的。可以根据 isDrawRenderRect 参数选择是否绘制渲染矩形。
+     * @param sprite 要被渲染的精灵。
+     * @param context 用于渲染的上下文。
+     * @param x 渲染的 x 坐标。
+     * @param y 渲染的 y 坐标。
+     * @param renderTexture 可选的渲染纹理。如果未提供，在需要时会创建一个新的。
+     * @param isDrawRenderRect 一个布尔值，表示是否绘制渲染矩形。为 true 时，从渲染纹理的(0,0)点开始绘制，但要减去缓存矩形的偏移；为 false 时，保持精灵的原始相对位置进行绘制。
+     * @returns 渲染的 RenderTexture2D。
+     */
     static RenderToRenderTexture(sprite: Sprite, context: Context | null, x: number, y: number, renderTexture: RenderTexture2D = null, isDrawRenderRect: boolean = true) {
         //如果需要构造RenderTexture
         // 先计算需要的texuture的大小。
         let scaleInfo = sprite._getCacheStyle()._calculateCacheRect(sprite, "bitmap"/*sprite._cacheStyle.cacheAs*/, 0, 0);
         let tRec = sprite._cacheStyle.cacheRect;
         let ctx = new Context();
+        ctx._drawingToTexture = true;
         context && ctx.copyState(context);
         let rt = renderTexture;
         if (rt) {
@@ -413,18 +439,27 @@ export class RenderSprite {
         }
 
         ctx.endRender();
+        ctx._drawingToTexture = false;
         //临时，恢复
         //context && ctx.render2D.setRenderTarget(context.render2D.out); endRender实现了
         ctx.destroy();
         return rt;
     }
     /**
-     * 把sprite画在当前贴图的x,y位置
-     * @param sprite 
-     * @param context 
-     * @param x 
-     * @param y 
-     * @returns 
+     * @en Renders a sprite to a cache texture. Checks if the sprite needs repainting or if the cache texture is missing or if there is a global repaint. If so, creates a new cache texture by rendering the sprite to a RenderTexture2D. 
+     * @param sprite The sprite to be rendered.
+     * @param context The context for rendering.
+     * @param x The x-coordinate for rendering.
+     * @param y The y-coordinate for rendering.
+     * @param isDrawRenderRect A boolean indicating whether to draw the render rectangle. When true, it starts drawing from (0,0) of the render texture and subtracts the offset of the cache rectangle. When false, it keeps the sprite's original relative position for drawing.
+     * @returns A boolean indicating whether a new cache texture was created (true for repaint, false otherwise).
+     * @zh 将精灵画在当前贴图的 x,y 位置。检查精灵是否需要重绘、缓存纹理是否缺失或者是否有全局重绘。如果是，则通过将精灵渲染到一个渲染纹理来创建新的缓存纹理。
+     * @param sprite 要被渲染的精灵。
+     * @param context 用于渲染的上下文。
+     * @param x 渲染的 x 坐标。
+     * @param y 渲染的 y 坐标。
+     * @param isDrawRenderRect 一个布尔值，表示是否绘制渲染矩形。为 true 时，从渲染纹理的(0,0)点开始绘制，但要减去缓存矩形的偏移；为 false 时，保持精灵的原始相对位置进行绘制。
+     * @returns 一个布尔值，表示是否创建了新的缓存纹理（true 表示重绘，false 表示未重绘）。
      */
     static RenderToCacheTexture(sprite: Sprite, context: Context | null, x: number, y: number, isDrawRenderRect: boolean = true) {
         var _cacheStyle = sprite._getCacheStyle();

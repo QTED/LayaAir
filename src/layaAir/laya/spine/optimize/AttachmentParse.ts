@@ -86,6 +86,17 @@ export class AttachmentParse {
      * @zh 附件中的索引数量。
      */
     indexCount:number = 0;
+    /**
+     * @en Indicates if normal rendering is required.
+     * @zh 指示是否需要正常渲染。
+     */
+    isNormalRender: boolean = false;
+
+    /**
+     * @en The number of bones that affect a vertex.
+     * @zh 影响一个顶点的最大骨骼数。
+     */
+    vertexBones:number = 0;
 
     /**
      * @en Initializes the attachment parser with the given parameters.
@@ -158,38 +169,31 @@ export class AttachmentParse {
                 let bones = mesh.bones;
                 let v = 0;
                 let needPoint = (vside - 6) / 4;
+                this.vertexBones = needPoint;
+
                 for (let w = 0, b = 0; w < vertexSize; w++) {
                     let n = bones[v++];
                     n += v;
+                    let result = [];
                     let offset = w * this.stride;
                     let nid = 0;
 
-                    let result = [];
                     for (; v < n; v++, b += 3, nid++) {
                         result.push([vertices[b], vertices[b + 1], vertices[b + 2], bones[v]]);
                         // if(boneMap.indexOf(bones[v]) == -1){
                         //     boneMap.push(bones[v]);
                         // }
                     }
-                    // console.log(boneMap);
-                    if (result.length == needPoint) {
 
-                    }
-                    else if (result.length < needPoint) {
-                        let n = needPoint - result.length;
-                        for (let i = 0; i < n; i++) {
-                            result.push([0, 0, 0, 0]);
-                        }
-                    }
-                    else {
-                        result = result.sort((a: any, b: any) => {
-                            return b[2] - a[2];
-                        });
+                    if(result.length > needPoint) {
+                        this.vertexBones = Math.max(this.vertexBones ,result.length);
                         result.length = needPoint;
+                        this.isNormalRender = true;
                     }
 
-                    for (let i = 0; i < result.length; i++) {
+                    for (let i = 0; i < needPoint; i++) {
                         let v: any = result[i];
+                        if (!v) continue
                         vertexArray[offset + i * 4] = v[0];
                         vertexArray[offset + i * 4 + 1] = v[1];
                         vertexArray[offset + i * 4 + 2] = v[2];

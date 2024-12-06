@@ -89,7 +89,7 @@ export class Light2DDemo {
             poly.addPoint(100 + ox, 100 + oy);
             poly.addPoint(0 + ox, 150 + oy);
             poly.addPoint(-100 + ox, 100 + oy);
-            light2.polyPoints = poly;
+            light2.polygonPoint = poly;
             spriteLight2.x = 200;
             spriteLight2.y = 300;
             light2.intensity = 1;
@@ -168,7 +168,7 @@ export class Light2DDemo {
             const tex = Laya.loader.getRes("res/bg2.png");
             const bk = this.scene.addChild(new Sprite());
             const mesh2Drender = bk.addComponent(Mesh2DRender);
-            mesh2Drender.shareMesh = this.generateRectVerticesAndUV(100000, 100000);
+            mesh2Drender.sharedMesh = this.generateRectVerticesAndUV(100000, 100000);
             mesh2Drender.texture = tex;
             mesh2Drender.lightReceive = true;
             bk.x = -50000;
@@ -177,7 +177,7 @@ export class Light2DDemo {
                 const tex = Laya.loader.getRes("res/apes/monkey2.png");
                 const ape = this.scene.addChild(new Sprite());
                 const mesh2Drender = ape.addComponent(Mesh2DRender);
-                mesh2Drender.shareMesh = this.generateRectVerticesAndUV(110, 145);
+                mesh2Drender.sharedMesh = this.generateRectVerticesAndUV(110, 145);
                 mesh2Drender.texture = tex;
                 mesh2Drender.lightReceive = true;
                 ape.x = 500;
@@ -215,9 +215,9 @@ export class Light2DDemo {
                 poly.addPoint(27, 40);
                 poly.addPoint(32, 25);
                 poly.addPoint(42, 15);
-                ls.polyPoints = poly;
-                ls.canInLight = false;
-                ls.outside = false;
+                ls.polygonPoint = poly;
+                //ls.canInLight = false;
+                //ls.outside = false;
 
                 ape.addComponent(testMove);
                 ape.addChild(this.camera);

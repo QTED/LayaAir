@@ -11,9 +11,8 @@ import { VertexElement } from "../../../renders/VertexElement";
 import { VertexElementFormat } from "../../../renders/VertexElementFormat";
 import { FastSinglelist } from "../../../utils/SingletonList";
 import { IRenderContext2D } from "../../DriverDesign/2DRenderPass/IRenderContext2D";
-import { IRenderElement2D } from "../../DriverDesign/2DRenderPass/IRenderElement2D";
-import { ShaderData } from "../../DriverDesign/RenderDevice/ShaderData";
-import { ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
+import { IRenderCMD } from "../../DriverDesign/RenderDevice/IRenderCMD";
+import { ShaderData, ShaderDataType } from "../../DriverDesign/RenderDevice/ShaderData";
 import { RenderState } from "../../RenderModuleData/Design/RenderState";
 import { GLESInternalRT } from "../RenderDevice/GLESInternalRT";
 import { GLESRenderGeometryElement } from "../RenderDevice/GLESRenderGeometryElement";
@@ -24,23 +23,33 @@ import { GLESREnderElement2D } from "./GLESRenderElement2D";
 export class GLESREnderContext2D implements IRenderContext2D {
 
     static isCreateBlitScreenELement = false;
+
     static blitScreenElement: GLESREnderElement2D;
+
+    private _tempList: any = [];
+
+    /**
+     * @internal
+     */
+    _nativeObj: any;
+
+    private _dist: GLESInternalRT;
 
     public get invertY(): boolean {
         return this._nativeObj.invertY;
     }
+
     public set invertY(value: boolean) {
         this._nativeObj.invertY = value;
     }
+
     public get pipelineMode(): string {
         return this._nativeObj.pipelineMode;
     }
+
     public set pipelineMode(value: string) {
         this._nativeObj.pipelineMode = value;
     }
-
-    _nativeObj: any;
-    sceneData: ShaderData;
 
     constructor() {
         this._nativeObj = new (window as any).conchGLESRenderContext2D();
@@ -49,6 +58,15 @@ export class GLESREnderContext2D implements IRenderContext2D {
         (!GLESREnderContext2D.isCreateBlitScreenELement) && this.setBlitScreenElement();
 
     }
+    private _sceneData: ShaderData;
+    public get sceneData(): ShaderData {
+        return this._sceneData;
+    }
+    public set sceneData(value: ShaderData) {
+        this._sceneData = value;
+        //TODO Native
+    }
+
 
     private setBlitScreenElement() {
         let blitScreenElement = LayaGL.render2DRenderPassFactory.createRenderElement2D();
@@ -96,8 +114,6 @@ export class GLESREnderContext2D implements IRenderContext2D {
         let fs = `
             #define SHADER_NAME GLESblitScreenFS
 
-            #include "Color.glsl";
-
             varying vec2 v_Texcoord0;
 
             void main()
@@ -118,8 +134,6 @@ export class GLESREnderContext2D implements IRenderContext2D {
         blitState.stencilTest = RenderState.STENCILTEST_OFF;
         blitState.stencilWrite = false;
         blitState.stencilOp = new Vector3(RenderState.STENCILOP_KEEP, RenderState.STENCILOP_KEEP, RenderState.STENCILOP_REPLACE);
-
-
         blitScreenElement.geometry = geometry as GLESRenderGeometryElement;
         blitScreenElement.materialShaderData = shaderData as GLESShaderData;
         blitScreenElement.subShader = subShader;
@@ -130,7 +144,6 @@ export class GLESREnderContext2D implements IRenderContext2D {
         GLESREnderContext2D.blitScreenElement = blitScreenElement as GLESREnderElement2D;
     }
 
-    private _tempList: any = [];
     drawRenderElementList(list: FastSinglelist<GLESREnderElement2D>): number {
         this._tempList.length = 0;
         let listelement = list.elements;
@@ -139,14 +152,31 @@ export class GLESREnderContext2D implements IRenderContext2D {
         });
         return this._nativeObj.drawRenderElementList(this._tempList, list.length);
     }
+
     setRenderTarget(value: GLESInternalRT, clear: boolean, clearColor: Color): void {
+        this._dist = value;
         this._nativeObj.setRenderTarget(value ? value._nativeObj : null, clear, clearColor);
     }
+
+    getRenderTarget(): GLESInternalRT {
+        return this._dist;
+    }
+
     setOffscreenView(width: number, height: number): void {
         this._nativeObj.setOffscreenView(width, height);
     }
+
     drawRenderElementOne(node: GLESREnderElement2D): void {
         this._nativeObj.drawRenderElementOne(node._nativeObj);
+    }
+
+    runOneCMD(cmd: IRenderCMD): void {
+        //TODO
+    }
+
+    runCMDList(cmds: IRenderCMD[]): void {
+        //throw new Error("Method not implemented.");
+        //TODO
     }
 
 

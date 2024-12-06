@@ -30,6 +30,7 @@ import { RenderTargetFormat } from "../RenderEngine/RenderEnum/RenderTargetForma
 import { BaseRenderNode2D } from "../NodeRender2D/BaseRenderNode2D";
 import { Vector2 } from "../maths/Vector2";
 import type { Stage } from "./Stage";
+import { Component } from "../components/Component";
 
 /**
  * @en Sprite is a basic display list node for displaying graphical content. By default, Sprite does not accept mouse events. Through the graphics API, images or vector graphics can be drawn, supporting operations like rotation, scaling, translation, and more. Sprite also functions as a container class, allowing the addition of multiple child nodes.
@@ -74,13 +75,9 @@ export class Sprite extends Node {
     _renderType: number = 0;
     /**@internal */
     _transform: Matrix | null = null;
-    /**@internal */
     protected _tfChanged: boolean = false;
-    /**@internal */
     protected _repaint: number = SpriteConst.REPAINT_NONE;
-    /**@internal */
     private _texture: Texture | null = null;
-    /**@internal */
     private _sizeFlag: number = 0;
 
     //以下变量为系统调用，请不要直接使用
@@ -139,8 +136,6 @@ export class Sprite extends Node {
     _skinBaseUrl: string;
 
     /**
-     * @override
-     * @inheritDoc
      * @en Destroy the sprite.
      * @param destroyChild Whether to destroy child nodes. Default is true.
      * @zh 销毁精灵。
@@ -162,6 +157,7 @@ export class Sprite extends Node {
         this._graphics = null;
     }
 
+    /** @ignore */
     constructor() {
         super();
     }
@@ -255,17 +251,24 @@ export class Sprite extends Node {
 
 
     /**
-     * 设置cacheAs为非空时此值才有效，staticCache=true时，子对象变化时不会自动更新缓存，只能通过调用reCache方法手动刷新。
      * @deprecated
+     * 设置cacheAs为非空时此值才有效，staticCache=true时，子对象变化时不会自动更新缓存，只能通过调用reCache方法手动刷新。
      */
     get staticCache(): boolean {
         return this._getCacheStyle().staticCache;
     }
-
     /**@deprecated */
     set staticCache(value: boolean) {
         this._getCacheStyle().staticCache = value;
         if (!value) this.reCache();
+    }
+    /**
+     * @deprecated
+     * @en Call this method to refresh the cache when cacheAs is set.
+     * @zh 在设置 cacheAs 的情况下，调用此方法会重新刷新缓存。
+     */
+    reCache(): void {
+        this._repaint |= SpriteConst.REPAINT_CACHE;
     }
 
     /**
@@ -277,22 +280,14 @@ export class Sprite extends Node {
     }
 
     set renderNode2D(value: BaseRenderNode2D) {
+        this._renderNode = value;
         if (value) {
             this._renderType |= SpriteConst.RENDERNODE2D;
-            this._renderNode = value;
         } else {
             this._renderType &= ~SpriteConst.RENDERNODE2D;
         }
     }
 
-    /**
-     * @deprecated
-     * @en Call this method to refresh the cache when cacheAs is set.
-     * @zh 在设置 cacheAs 的情况下，调用此方法会重新刷新缓存。
-     */
-    reCache(): void {
-        this._repaint |= SpriteConst.REPAINT_CACHE;
-    }
 
     /**
      * @en Get the repaint type.
@@ -405,13 +400,12 @@ export class Sprite extends Node {
     }
 
     /**
-     * @internal
      * @en Set the width of the Node.
      * @param number value  The width value, in pixels.
      * @zh 设置节点的宽度。
      * @param number value  宽度值，以像素为单位。
      */
-    set_width(value: number): void {
+    protected set_width(value: number): void {
         let flag = this._sizeFlag;
         if (value == null) {
             value = 0;
@@ -432,11 +426,10 @@ export class Sprite extends Node {
     }
 
     /**
-     * @internal
      * @en Get the width of the Node, in pixels
      * @zh 获取节点的宽度。以像素为单位。
      */
-    get_width(): number {
+    protected get_width(): number {
         if (!this.autoSize) return (this._width == 0 && (this._sizeFlag & 1) == 0 && this.texture) ? this.texture.width : this._width;
         if (this.texture) return this.texture.width;
         if (!this._graphics && this._children.length === 0) return 0;
@@ -456,11 +449,10 @@ export class Sprite extends Node {
     }
 
     /**
-    * @internal
     * @en Set the height of the Node, in pixels
     * @zh 设置节点的高度，单位为像素。
     */
-    set_height(value: number): void {
+    protected set_height(value: number): void {
         let flag = this._sizeFlag;
         if (value == null) {
             value = 0;
@@ -481,11 +473,10 @@ export class Sprite extends Node {
     }
 
     /**
-    * @internal
     * @en Get the height of the Node, in pixels.
     * @zh 获取节点的高度，以像素为单位。
     */
-    get_height(): number {
+    protected get_height(): number {
         if (!this.autoSize) return (this._height == 0 && (this._sizeFlag & 2) == 0 && this.texture) ? this.texture.height : this._height;
         if (this.texture) return this.texture.height;
         if (!this._graphics && this._children.length === 0) return 0;
@@ -493,7 +484,6 @@ export class Sprite extends Node {
     }
 
     /**
-     * @internal
      * @en Check if the width is set.
      * @returns True if the width is set, otherwise false.
      * @zh 检查是否设置了宽度。
@@ -504,7 +494,6 @@ export class Sprite extends Node {
     }
 
     /**
-     * @internal
      * @en Check if the height is set.
      * @returns True if the height is set, otherwise false.
      * @zh 检查是否设置了高度。
@@ -523,8 +512,6 @@ export class Sprite extends Node {
     }
 
     /**
-     * @internal
-     * @protected
      * @en Called when the layout should be refreshed.
      * @zh 当需要刷新布局时调用。
      */
@@ -667,11 +654,20 @@ export class Sprite extends Node {
             rst.length = 0;
             pList = rst;
         }
+
+        if (this._renderNode) {
+            rec = Rectangle.TEMP;
+            rec.setTo(0, 0, this.width , this.height);
+            pList.push(...rec._getBoundPoints());
+        }
+
         if (this._texture) {
             rec = Rectangle.TEMP;
             rec.setTo(0, 0, this.width || this._texture.width, this.height || this._texture.height);
             pList.push(...rec._getBoundPoints());
         }
+
+       
         //处理子对象区域
         let chidren = this._children;
         for (let i = 0, n = chidren.length; i < n; i++) {
@@ -715,7 +711,7 @@ export class Sprite extends Node {
     }
 
     /**
-     * @private
+     * @ignore
      * @en Get the sprite style.
      * @return The sprite style (SpriteStyle).
      * @zh 获取精灵样式。
@@ -727,7 +723,7 @@ export class Sprite extends Node {
     }
 
     /**
-     * @private
+     * @ignore
      * @en Set the sprite style.
      * @param value The sprite style to set.
      * @zh 设置精灵样式。
@@ -941,8 +937,6 @@ export class Sprite extends Node {
     }
 
     /**
-     * @internal
-     * @protected 
      * @en Adjust the transform matrix.
      * @return The adjusted transform matrix.
      * @zh 调整变换矩阵。
@@ -1575,7 +1569,7 @@ export class Sprite extends Node {
         return Sprite.drawToCanvas(this, canvasWidth, canvasHeight, offsetX, offsetY);
     }
     /**
-     * @private
+     * @ignore
      * @en Draws the specified Sprite to a Canvas and returns an HtmlCanvas object.
      * @param sprite The Sprite to draw.
      * @param canvasWidth The width of the canvas.
@@ -1627,6 +1621,7 @@ export class Sprite extends Node {
      * @param offsetX The X-axis offset for drawing.
      * @param offsetY The Y-axis offset for drawing.
      * @param rt The render target.
+     * @param isDrawRenderRect A boolean indicating whether to draw the render rectangle. When true, it starts drawing from (0,0) of the render texture and subtracts the offset of the cache rectangle. When false, it keeps the sprite's original relative position for drawing.
      * @returns The drawn Texture or RenderTexture2D object.
      * @zh 绘制当前对象到一个 Texture 对象上。
      * @param canvasWidth 画布宽度。
@@ -1634,6 +1629,7 @@ export class Sprite extends Node {
      * @param offsetX 绘制的 X 轴偏移量。
      * @param offsetY 绘制的 Y 轴偏移量。
      * @param rt 渲染目标。
+     * @param isDrawRenderRect 表示是否绘制渲染矩形。为 true 时，从渲染纹理的(0,0)点开始绘制，但要减去缓存矩形的偏移；为 false 时，保持精灵的原始相对位置进行绘制。
      * @returns 绘制的 Texture 或 RenderTexture2D 对象。
      */
     drawToTexture(canvasWidth: number, canvasHeight: number, offsetX: number, offsetY: number, rt: RenderTexture2D | null = null, isDrawRenderRect: boolean = true): Texture | RenderTexture2D {
@@ -1642,29 +1638,8 @@ export class Sprite extends Node {
     }
 
     /**
-     * @en Draws the current object to a RenderTexture2D object.
-     * @param canvasWidth The width of the canvas.
-     * @param canvasHeight The height of the canvas.
-     * @param offsetX The X-axis offset for drawing.
-     * @param offsetY The Y-axis offset for drawing.
-     * @param rt The render target.
-     * @returns The drawn RenderTexture2D object.
-     * @zh 绘制当前对象到一个 Texture 对象上。
-     * @param canvasWidth 画布宽度。
-     * @param canvasHeight 画布高度。
-     * @param offsetX 绘制的 X 轴偏移量。
-     * @param offsetY 绘制的 Y 轴偏移量。
-     * @param rt 渲染目标。
-     * @returns 绘制的 RenderTexture2D 对象。
-     */
-    drawToRenderTexture2D(canvasWidth: number, canvasHeight: number, offsetX: number, offsetY: number, rt: RenderTexture2D | null = null): RenderTexture2D {
-        let res = Sprite.drawToRenderTexture2D(this, canvasWidth, canvasHeight, offsetX, offsetY, rt);
-        return res;
-    }
-
-    /**
      * @deprecated
-     * @private
+     * @ignore
      * @en Draws the specified Sprite to a Texture or RenderTexture2D object.
      * @param sprite The Sprite to draw.
      * @param canvasWidth The width of the canvas.
@@ -1672,6 +1647,7 @@ export class Sprite extends Node {
      * @param offsetX The X-axis offset for drawing.
      * @param offsetY The Y-axis offset for drawing.
      * @param rt The render target. If not provided, a new RenderTexture2D will be created.
+     * @param isDrawRenderRect A boolean indicating whether to draw the render rectangle. When true, it starts drawing from (0,0) of the render texture and subtracts the offset of the cache rectangle. When false, it keeps the sprite's original relative position for drawing.
      * @returns The drawn Texture or RenderTexture2D object.
      * @zh 将指定的 Sprite 绘制到 Texture 或 RenderTexture2D 对象上。
      * @param sprite 要绘制的 Sprite。
@@ -1680,6 +1656,7 @@ export class Sprite extends Node {
      * @param offsetX 绘制的 X 轴偏移量。
      * @param offsetY 绘制的 Y 轴偏移量。
      * @param rt 渲染目标。如果未提供,将创建一个新的 RenderTexture2D。
+     * @param isDrawRenderRect 表示是否绘制渲染矩形。为 true 时，从渲染纹理的(0,0)点开始绘制，但要减去缓存矩形的偏移；为 false 时，保持精灵的原始相对位置进行绘制。
      * @returns 绘制的 Texture 或 RenderTexture2D 对象。
      */
     static drawToTexture(sprite: Sprite, canvasWidth: number, canvasHeight: number, offsetX: number, offsetY: number, rt: RenderTexture2D | null = null, isDrawRenderRect: boolean = true): Texture | RenderTexture2D {
@@ -1701,8 +1678,33 @@ export class Sprite extends Node {
         return outrt;
     }
 
+
     /**
-     * @private
+     * @en Draws the current object to a RenderTexture2D object.
+     * @param canvasWidth The width of the canvas.
+     * @param canvasHeight The height of the canvas.
+     * @param offsetX The X-axis offset for drawing.
+     * @param offsetY The Y-axis offset for drawing.
+     * @param rt The render target.
+     * @param isDrawRenderRect A boolean indicating whether to draw the render rectangle. When true, it starts drawing from (0,0) of the render texture and subtracts the offset of the cache rectangle. When false, it keeps the sprite's original relative position for drawing.
+     * @param flipY Optional. If true, the texture will be flipped vertical. Default is false.
+     * @returns The drawn RenderTexture2D object.
+     * @zh 绘制当前对象到一个 Texture 对象上。
+     * @param canvasWidth 画布宽度。
+     * @param canvasHeight 画布高度。
+     * @param offsetX 绘制的 X 轴偏移量。
+     * @param offsetY 绘制的 Y 轴偏移量。
+     * @param rt 渲染目标。
+     * @param isDrawRenderRect 表示是否绘制渲染矩形。为 true 时，从渲染纹理的(0,0)点开始绘制，但要减去缓存矩形的偏移；为 false 时，保持精灵的原始相对位置进行绘制。
+     * @param flipY 可选。如果为 true，则垂直翻转纹理。默认为 false。
+     * @returns 绘制的 RenderTexture2D 对象。
+     */
+    drawToRenderTexture2D(canvasWidth: number, canvasHeight: number, offsetX: number, offsetY: number, rt: RenderTexture2D | null = null, isDrawRenderRect: boolean = true, flipY: boolean = false): RenderTexture2D {
+        let res = Sprite.drawToRenderTexture2D(this, canvasWidth, canvasHeight, offsetX, offsetY, rt, isDrawRenderRect, flipY);
+        return res;
+    }
+    /**
+     * @ignore
      * @en Draws the specified Sprite to a RenderTexture2D object.
      * @param sprite The Sprite to draw.
      * @param canvasWidth The width of the canvas.
@@ -1710,6 +1712,8 @@ export class Sprite extends Node {
      * @param offsetX The X-axis offset for drawing.
      * @param offsetY The Y-axis offset for drawing.
      * @param rt The render target. If not provided, a new RenderTexture2D will be created.
+     * @param isDrawRenderRect A boolean indicating whether to draw the render rectangle. When true, it starts drawing from (0,0) of the render texture and subtracts the offset of the cache rectangle. When false, it keeps the sprite's original relative position for drawing.
+     * @param flipY Optional. If true, the texture will be flipped vertical. Default is false.
      * @returns The drawn RenderTexture2D object.
      * @zh 将指定的 Sprite 绘制到 RenderTexture2D 对象上。
      * @param sprite 要绘制的 Sprite。
@@ -1718,9 +1722,11 @@ export class Sprite extends Node {
      * @param offsetX 绘制的 X 轴偏移量。
      * @param offsetY 绘制的 Y 轴偏移量。
      * @param rt 渲染目标。如果未提供,将创建一个新的 RenderTexture2D。
+     * @param isDrawRenderRect 表示是否绘制渲染矩形。为 true 时，从渲染纹理的(0,0)点开始绘制，但要减去缓存矩形的偏移；为 false 时，保持精灵的原始相对位置进行绘制。
+     * @param flipY 可选。如果为 true，则垂直翻转纹理。默认为 false。
      * @returns 绘制的 RenderTexture2D 对象。
      */
-    static drawToRenderTexture2D(sprite: Sprite, canvasWidth: number, canvasHeight: number, offsetX: number, offsetY: number, rt: RenderTexture2D | null = null): RenderTexture2D {
+    static drawToRenderTexture2D(sprite: Sprite, canvasWidth: number, canvasHeight: number, offsetX: number, offsetY: number, rt: RenderTexture2D | null = null, isDrawRenderRect: boolean = true, flipY: boolean = false): RenderTexture2D {
         let renderout = rt || new RenderTexture2D(canvasWidth, canvasHeight, RenderTargetFormat.R8G8B8A8);
         let ctx = new Context();
         if (rt) {
@@ -1730,7 +1736,11 @@ export class Sprite extends Node {
         }
         ctx.render2D = ctx.render2D.clone(renderout);
         ctx._drawingToTexture = true;
-        let outrt = RenderSprite.RenderToRenderTexture(sprite, ctx, offsetX, offsetY, renderout);
+        if (flipY) {
+            renderout._invertY = true;//翻转纹理
+        }
+        let outrt = RenderSprite.RenderToRenderTexture(sprite, ctx, offsetX, offsetY, renderout, isDrawRenderRect);
+        ctx._drawingToTexture = false;
         ctx.destroy();
         return outrt;
     }
@@ -1914,8 +1924,6 @@ export class Sprite extends Node {
     }
 
     /**
-     * @internal
-     * @protected
      * @en Starts listening to a specific event type. This method is called when a new event listener is added.
      * If it is a mouse event, it sets itself and its parent objects to accept mouse interaction events.
      * @param type The event type.
@@ -1937,8 +1945,6 @@ export class Sprite extends Node {
 
 
     /**
-    * @internal
-    * @protected
     * @en Ensures that when the node is set to accept mouse interaction events, all parent objects are also set to accept mouse interaction events.
     * @zh 当节点设置为接受鼠标交互事件时，确保所有父对象也被设置为接受鼠标交互事件。
     */
@@ -1956,9 +1962,6 @@ export class Sprite extends Node {
     }
 
     /**
-     * @internal
-     * @protected 
-     * @override
      * @en Set the parent node of the current node.
      * @param value The new parent node.
      * @zh 设置当前节点的父节点。
@@ -2052,9 +2055,6 @@ export class Sprite extends Node {
     }
 
     /**
-    * @internal
-    * @protected
-    * @override
     * @en Callback when a child node changes.
     * @param child The child node that has changed.
     * @zh 子节点发生变化时的回调。
@@ -2070,7 +2070,6 @@ export class Sprite extends Node {
     }
 
     /**
-     * @override
      * @en Repaint the parent node. When `cacheAs` is enabled, set all parent object caches to invalid.
      * @param type The type of repaint. Default is SpriteConst.REPAINT_CACHE.
      * @zh 重新绘制父节点。启用 `cacheAs` 时，设置所有父对象缓存失效。
@@ -2093,7 +2092,7 @@ export class Sprite extends Node {
     }
 
     /**
-     * @enYou can set a rectangular area as the clickable region, or set a HitArea instance as the clickable region. The HitArea can have both clickable and non-clickable areas defined. If the hitArea is not set, the mouse collision detection will be based on the area formed by the width and height of the object.
+     * @en You can set a rectangular area as the clickable region, or set a HitArea instance as the clickable region. The HitArea can have both clickable and non-clickable areas defined. If the hitArea is not set, the mouse collision detection will be based on the area formed by the width and height of the object.
      * @zh 可以设置一个矩形区域作为点击区域，或者设置一个 `HitArea` 实例作为点击区域，HitArea 内可以设置可点击和不可点击区域。如果不设置 hitArea，则根据宽高形成的区域进行鼠标碰撞检测。
      */
     get hitArea(): IHitArea {
@@ -2182,7 +2181,6 @@ export class Sprite extends Node {
 
     /**
      * @internal
-     * @override
      * @en Set the display status of the node.
      * @param value The display status.
      * @zh 设置节点的显示状态。
@@ -2436,7 +2434,6 @@ export class Sprite extends Node {
 
 
     /**
-     * @internal
      * @en Get the global matrix of the sprite.
      * @returns The global transformation matrix of the sprite.
      * @zh 获取精灵的全局矩阵。
@@ -2444,13 +2441,18 @@ export class Sprite extends Node {
      */
     getGlobalMatrix() {
         if (this._globalMatrix == null) this._globalMatrix = Matrix.create();
-        if (this.scene == null) { return this._globalMatrix; }
-        if (this._getGlobalCacheFlag(Sprite.Sprite_GlobalDeltaFlage_Matrix)) {
+        //if (this.scene == null) { return this._globalMatrix; }
+        if (this.cacheGlobal && !this._getGlobalCacheFlag(Sprite.Sprite_GlobalDeltaFlage_Matrix)) {
+            return this._globalMatrix;
+        } else {
             const style = this._style;
             this._globalMatrix.setMatrix(this._x, this._y, style.scaleX, style.scaleY, style.rotation, style.skewX, style.skewY, style.pivotX, style.pivotY);
-            Matrix.mul(this._globalMatrix, (<Sprite>this.parent).getGlobalMatrix(), this._globalMatrix);
-            this._setGlobalCacheFlag(Sprite.Sprite_GlobalDeltaFlage_Matrix, false);
-            this._syncGlobalFlag(Sprite.Sprite_GlobalDeltaFlage_Matrix, true);
+            if (this.parent) {
+                Matrix.mul(this._globalMatrix, (<Sprite>this.parent).getGlobalMatrix(), this._globalMatrix);
+                this._setGlobalCacheFlag(Sprite.Sprite_GlobalDeltaFlage_Matrix, false);
+                this._syncGlobalFlag(Sprite.Sprite_GlobalDeltaFlage_Matrix, true);
+            }
+
         }
         return this._globalMatrix;
     }
@@ -2692,7 +2694,6 @@ export class Sprite extends Node {
     }
 
     /**
-    * @internal 
     * @en Sets a global cache flag for a specific type.
     * @param type The type of cache flag to set.
     * @param value Whether to enable the cache flag.
@@ -2716,7 +2717,6 @@ export class Sprite extends Node {
     get globalDeltaFlages(): number {
         return this._globalDeltaFlages;
     }
-
     /**
      * @internal
      * @param flag 
@@ -2729,5 +2729,16 @@ export class Sprite extends Node {
                 (element as Sprite)._syncGlobalFlag(flag, value);
             });
         }
+    }
+
+    _addComponentInstance(comp: Component): void {
+        if (
+            comp instanceof BaseRenderNode2D &&
+            this._components?.some((c) => c instanceof BaseRenderNode2D)
+        ) {
+            console.warn(`${this.name} add RenderNode2D invalid, one sprite can only add one RenderNode`);
+            return;
+        }
+        super._addComponentInstance(comp);
     }
 }

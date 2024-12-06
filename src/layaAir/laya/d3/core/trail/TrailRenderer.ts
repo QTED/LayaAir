@@ -1,17 +1,15 @@
 import { Sprite3D } from "../Sprite3D"
 import { BaseRender } from "../render/BaseRender"
-import { TrailFilter } from "./TrailFilter";
-import { FloatKeyframe } from "../FloatKeyframe";
-import { Gradient } from "../Gradient";
+import { TrailAlignment, TrailFilter } from "./TrailFilter";
 import { Component } from "../../../components/Component";
 import { Bounds } from "../../math/Bounds";
-import { TrailTextureMode } from "../TrailTextureMode"
-import { TrailAlignment } from "./TrailAlignment"
-import { Matrix4x4 } from "../../../maths/Matrix4x4";
 import { RenderContext3D } from "../render/RenderContext3D";
 import { Laya3DRender } from "../../RenderObjs/Laya3DRender";
 import { IBaseRenderNode } from "../../../RenderDriver/RenderModuleData/Design/3D/I3DRenderModuleData";
 import { TrailMaterial } from "./TrailMaterial";
+import { TrailTextureMode } from "../../../display/RenderFeatureComman/Trail/TrailTextureMode";
+import { FloatKeyframe } from "../../../maths/FloatKeyframe";
+import { Gradient } from "../../../maths/Gradient";
 
 /**
  * @en The `TrailRenderer` class is used to create a trail renderer.
@@ -21,9 +19,6 @@ export class TrailRenderer extends BaseRender {
 
     /**@internal */
     _trailFilter: TrailFilter;
-
-    /**@internal */
-    protected _projectionViewWorldMatrix: Matrix4x4 = new Matrix4x4();
     /** @ignore */
     constructor() {
         super();
@@ -32,7 +27,6 @@ export class TrailRenderer extends BaseRender {
     protected _getcommonUniformMap(): Array<string> {
         return ["Sprite3D", "TrailRender"];
     }
-
 
     protected _createBaseRenderNode(): IBaseRenderNode {
         return Laya3DRender.Render3DModuleDataFactory.createMeshRenderNode();
@@ -138,7 +132,6 @@ export class TrailRenderer extends BaseRender {
      */
     protected _onEnable(): void {
         super._onEnable();
-
         (this.owner as Sprite3D)._transform.position.cloneTo(this._trailFilter._lastPosition);//激活时需要重置上次位置
     }
 
@@ -153,8 +146,7 @@ export class TrailRenderer extends BaseRender {
 
         this._renderElements.forEach((element, index) => {
             let geometry = element._geometry;
-            element._renderElementOBJ.isRender = geometry._prepareRender(context);
-            geometry._updateRenderParams(context);
+            element._renderElementOBJ.isRender = this._trailFilter._isRender();
 
             let material = this.sharedMaterial ?? TrailMaterial.defaultMaterial;
             material = this.sharedMaterials[index] ?? material;
@@ -204,21 +196,20 @@ export class TrailRenderer extends BaseRender {
      * @internal
      * @param dest 
      */
-    _cloneTo(dest: Component): void {
+    _cloneTo(dest: TrailRenderer): void {
         super._cloneTo(dest);
-        let render = dest as TrailRenderer;
-        render.time = this.time;
-        render.minVertexDistance = this.minVertexDistance;
+        dest.time = this.time;
+        dest.minVertexDistance = this.minVertexDistance;
         //render.widthCurve = this.widthCurve;
         var widthCurve: FloatKeyframe[] = [];
         var widthCurveData: any[] = this.widthCurve;
         for (let i = 0, n = this.widthCurve.length; i < n; i++) {
             widthCurve.push(widthCurveData[i].clone());
         }
-        render.widthCurve = widthCurve;
-        render.colorGradient = this.colorGradient.clone();
-        render.textureMode = this.textureMode;
-        render.alignment = this.alignment;
+        dest.widthCurve = widthCurve;
+        dest.colorGradient = this.colorGradient.clone();
+        dest.textureMode = this.textureMode;
+        dest.alignment = this.alignment;
     }
 
 }

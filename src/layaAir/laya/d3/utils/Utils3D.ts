@@ -3,13 +3,9 @@ import { Texture2D } from "../../resource/Texture2D";
 import { PixelLineSprite3D } from "../core/pixelLine/PixelLineSprite3D";
 import { BoundBox } from "../math/BoundBox";
 import { TextureGenerator } from "../resource/TextureGenerator";
-import { ILaya3D } from "../../../ILaya3D";
-import { HTMLCanvas } from "../../resource/HTMLCanvas";
 import { TextureFormat } from "../../RenderEngine/RenderEnum/TextureFormat";
 import { FilterMode } from "../../RenderEngine/RenderEnum/FilterMode";
 import { WrapMode } from "../../RenderEngine/RenderEnum/WrapMode";
-import { RenderTargetFormat } from "../../RenderEngine/RenderEnum/RenderTargetFormat";
-import { LayaEnv } from "../../../LayaEnv";
 import { Bounds } from "../math/Bounds";
 import { Color } from "../../maths/Color";
 import { Matrix4x4 } from "../../maths/Matrix4x4";
@@ -17,21 +13,13 @@ import { Quaternion } from "../../maths/Quaternion";
 import { Vector3 } from "../../maths/Vector3";
 import { Vector4 } from "../../maths/Vector4";
 import { RenderTexture } from "../../resource/RenderTexture";
+import { Utils } from "../../utils/Utils";
 
 /**
  * @en Utils3D is a class used to create 3D tools.
  * @zh Utils3D 类用于创建3D工具。
  */
 export class Utils3D {
-    private static _tempVector3_0: Vector3 = new Vector3();
-    private static _tempVector3_1: Vector3 = new Vector3();
-    private static _tempVector3_2: Vector3 = new Vector3();
-
-    private static _tempArray16_0: Float32Array = new Float32Array(16);
-    private static _tempArray16_1: Float32Array = new Float32Array(16);
-    private static _tempArray16_2: Float32Array = new Float32Array(16);
-    private static _tempArray16_3: Float32Array = new Float32Array(16);
-
     /**
      * @internal
      */
@@ -62,9 +50,9 @@ export class Utils3D {
      */
     private static _rotationTransformScaleSkinAnimation(tx: number, ty: number, tz: number, qx: number, qy: number, qz: number, qw: number, sx: number, sy: number, sz: number, outArray: Float32Array, outOffset: number): void {
 
-        var re: Float32Array = Utils3D._tempArray16_0;
-        var se: Float32Array = Utils3D._tempArray16_1;
-        var tse: Float32Array = Utils3D._tempArray16_2;
+        var re: Float32Array = _tempArray16_0;
+        var se: Float32Array = _tempArray16_1;
+        var tse: Float32Array = _tempArray16_2;
 
         //平移
 
@@ -131,25 +119,18 @@ export class Utils3D {
     }
 
     /**
-     * @internal
-     */
-    static _compIdToNode: any = new Object();
-    static _tempV0: Vector3 = new Vector3();
-    static _tempV1: Vector3 = new Vector3();
-
-    /**
      * @en Convert vertices to a billboard
      * @zh 将顶点进行广告牌转换
      */
     static billboardTrans(v0: Vector3, cameraDir: Vector3, cameraUp: Vector3, out: Vector3) {
         //vec3 positionOS = vertex.positionOS.x * normalize(cross(u_CameraDirection, u_CameraUp));
         //positionOS += vertex.positionOS.y * normalize(u_CameraUp);
-        Vector3.normalize(cameraUp, Utils3D._tempV1);
-        Vector3.cross(cameraDir, cameraUp, Utils3D._tempV0);
-        Vector3.normalize(Utils3D._tempV0, Utils3D._tempV0);
-        Vector3.scale(Utils3D._tempV0, v0.x, out);
-        Vector3.scale(cameraUp, v0.y, Utils3D._tempV1);
-        Vector3.add(out, Utils3D._tempV1, out);
+        Vector3.normalize(cameraUp, _tempVector3_1);
+        Vector3.cross(cameraDir, cameraUp, _tempVector3_0);
+        Vector3.normalize(_tempVector3_0, _tempVector3_0);
+        Vector3.scale(_tempVector3_0, v0.x, out);
+        Vector3.scale(cameraUp, v0.y, _tempVector3_1);
+        Vector3.add(out, _tempVector3_1, out);
     }
 
     /**
@@ -167,9 +148,9 @@ export class Utils3D {
      * @returns 若P在三角形内，返回true，否则返回false。
      */
     static PointinTriangle(A: Vector3, B: Vector3, C: Vector3, P: Vector3): boolean {
-        let v0 = C.vsub(A, Utils3D._tempVector3_0);
-        let v1 = B.vsub(A, Utils3D._tempVector3_1);
-        let v2 = P.vsub(A, Utils3D._tempVector3_2);
+        let v0 = C.vsub(A, _tempVector3_0);
+        let v1 = B.vsub(A, _tempVector3_1);
+        let v2 = P.vsub(A, _tempVector3_2);
 
         let dot00 = v0.dot(v0);
         let dot01 = v0.dot(v1);
@@ -313,7 +294,7 @@ export class Utils3D {
         var i: number, ai0: number, ai1: number, ai2: number, ai3: number;
 
         if (outArray === rightArray) {
-            rightArray = Utils3D._tempArray16_3;
+            rightArray = _tempArray16_3;
             for (i = 0; i < 16; ++i) {
                 rightArray[i] = outArray[outOffset + i];
             }
@@ -684,8 +665,8 @@ export class Utils3D {
      * @internal
      */
     static scaleBlend(sa: Vector3, sb: Vector3, w: number, out: Vector3): void {
-        var saw: Vector3 = Utils3D._tempVector3_0;
-        var sbw: Vector3 = Utils3D._tempVector3_1;
+        var saw: Vector3 = _tempVector3_0;
+        var sbw: Vector3 = _tempVector3_1;
         Utils3D.scaleWeight(sa, 1.0 - w, saw);
         Utils3D.scaleWeight(sb, w, sbw);
         var sng: Vector3 = w > 0.5 ? sb : sa;
@@ -746,8 +727,8 @@ export class Utils3D {
         if (debugLine.lineCount + 12 > debugLine.maxLineCount)
             debugLine.maxLineCount += 12;
 
-        var start: Vector3 = Utils3D._tempVector3_0;
-        var end: Vector3 = Utils3D._tempVector3_1;
+        var start: Vector3 = _tempVector3_0;
+        var end: Vector3 = _tempVector3_1;
         var min: Vector3 = boundBox.min;
         var max: Vector3 = boundBox.max;
 
@@ -871,61 +852,7 @@ export class Utils3D {
      * @returns 
      */
     static uint8ArrayToArrayBuffer(rendertexture: RenderTexture) {
-        let pixelArray: Uint8Array | Float32Array;
-        let width = rendertexture.width;
-        let height = rendertexture.height;
-        switch (rendertexture.colorFormat) {
-            case RenderTargetFormat.R8G8B8:
-                pixelArray = new Uint8Array(width * height * 4);
-                break;
-            case RenderTargetFormat.R8G8B8A8:
-                pixelArray = new Uint8Array(width * height * 4);
-                break;
-            case RenderTargetFormat.R16G16B16A16:
-                pixelArray = new Float32Array(width * height * 4);
-                break;
-            default:
-                throw "this function is not surpprt " + rendertexture.format.toString() + "format Material";
-        }
-        rendertexture.getData(0, 0, rendertexture.width, rendertexture.height, pixelArray);
-        //tranceTo
-        //throw " rt get Data";
-        switch (rendertexture.colorFormat) {
-            case RenderTargetFormat.R16G16B16A16:
-                let ori = pixelArray;
-                let trans = new Uint8Array(width * height * 4);
-                for (let i = 0, n = ori.length; i < n; i++) {
-                    trans[i] = Math.min(Math.floor(ori[i] * 255), 255);
-                }
-                pixelArray = trans;
-                break;
-        }
-
-        let pixels = pixelArray;
-        var bs: String;
-        if (LayaEnv.isConch) {
-            //TODO:
-            //var base64img=__JS__("conchToBase64('image/png',1,pixels,canvasWidth,canvasHeight)");
-            //var l = base64img.split(",");
-            //if (isBase64)
-            //	return base64img;
-            //return base.utils.DBUtils.decodeArrayBuffer(l[1]);
-        }
-        else {
-            var canv: HTMLCanvas = new HTMLCanvas(true);
-            canv.lock = true;
-            canv.size(width, height);
-            var ctx2d = canv.getContext('2d');
-            //@ts-ignore
-            var imgdata: ImageData = ctx2d.createImageData(width, height);
-            //@ts-ignore
-            imgdata.data.set(new Uint8ClampedArray(pixels));
-            //@ts-ignore
-            ctx2d.putImageData(imgdata, 0, 0);;
-            bs = canv.source.toDataURL();
-            canv.destroy();
-        }
-        return bs;
+        return Utils.uint8ArrayToArrayBuffer(rendertexture);
     }
 
     /**
@@ -937,65 +864,17 @@ export class Utils3D {
      * @returns 一个 Promise，该 Promise 将解析为表示 RenderTexture 的 Base64 字符串。
      */
     static uint8ArrayToArrayBufferAsync(rendertexture: RenderTexture): Promise<String> {
-        let pixelArray: Uint8Array | Float32Array;
-        let width = rendertexture.width;
-        let height = rendertexture.height;
-        switch (rendertexture.colorFormat) {
-            case RenderTargetFormat.R8G8B8:
-                pixelArray = new Uint8Array(width * height * 4);
-                break;
-            case RenderTargetFormat.R8G8B8A8:
-                pixelArray = new Uint8Array(width * height * 4);
-                break;
-            case RenderTargetFormat.R16G16B16A16:
-                pixelArray = new Float32Array(width * height * 4);
-                break;
-            default:
-                throw "this function is not surpprt " + rendertexture.format.toString() + "format Material";
-        }
-        return rendertexture.getDataAsync(0, 0, rendertexture.width, rendertexture.height, pixelArray).then(() => {
-
-            //tranceTo
-            //throw " rt get Data";
-            switch (rendertexture.colorFormat) {
-                case RenderTargetFormat.R16G16B16A16:
-                    let ori = pixelArray;
-                    let trans = new Uint8Array(width * height * 4);
-                    for (let i = 0, n = ori.length; i < n; i++) {
-                        trans[i] = Math.min(Math.floor(ori[i] * 255), 255);
-                    }
-                    pixelArray = trans;
-                    break;
-            }
-
-            let pixels = pixelArray;
-            var bs: String;
-            if (LayaEnv.isConch) {
-                //TODO:
-                //var base64img=__JS__("conchToBase64('image/png',1,pixels,canvasWidth,canvasHeight)");
-                //var l = base64img.split(",");
-                //if (isBase64)
-                //	return base64img;
-                //return base.utils.DBUtils.decodeArrayBuffer(l[1]);
-            }
-            else {
-                var canv: HTMLCanvas = new HTMLCanvas(true);
-                canv.lock = true;
-                canv.size(width, height);
-                var ctx2d = canv.getContext('2d');
-                //@ts-ignore
-                var imgdata: ImageData = ctx2d.createImageData(width, height);
-                //@ts-ignore
-                imgdata.data.set(new Uint8ClampedArray(pixels));
-                //@ts-ignore
-                ctx2d.putImageData(imgdata, 0, 0);;
-                bs = canv.source.toDataURL();
-                canv.destroy();
-            }
-            return Promise.resolve(bs);
-        });
+        return Utils.uint8ArrayToArrayBufferAsync(rendertexture);
     }
 }
 
 (window as any).getRTBase64 = Utils3D.uint8ArrayToArrayBuffer;
 const TEMPVector30 = new Vector3();
+const _tempVector3_0: Vector3 = new Vector3();
+const _tempVector3_1: Vector3 = new Vector3();
+const _tempVector3_2: Vector3 = new Vector3();
+
+const _tempArray16_0: Float32Array = new Float32Array(16);
+const _tempArray16_1: Float32Array = new Float32Array(16);
+const _tempArray16_2: Float32Array = new Float32Array(16);
+const _tempArray16_3: Float32Array = new Float32Array(16);

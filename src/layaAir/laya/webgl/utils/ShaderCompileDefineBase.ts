@@ -33,7 +33,6 @@ export class ShaderCompileDefineBase {
     /** @internal */
     name: string;
 
-    nodeCommonMap: Array<string>;
 
     constructor(owner: any, name: string, compiledObj: IShaderCompiledObj) {
         this._owner = owner;

@@ -21,29 +21,28 @@ export class Mesh2DRender extends BaseRenderNode2D {
      */
     static mesh2DDefaultMaterial: Material;
 
-    /**@internal */
-    private _shareMesh: Mesh2D;
+    private _sharedMesh: Mesh2D;
 
-    /**@internal */
     private _baseRender2DTexture: BaseTexture;
 
-    /**@internal */
-    private _color: Color;
+    private _color: Color = new Color();
 
+    private _normal2DTexture: BaseTexture;
+    private _normal2DStrength: number = 0;
 
     /**
      * @en 2D Mesh 
      * @zh 2D 渲染网格
      */
-    set shareMesh(value: Mesh2D) {
-        if (this._shareMesh == value)
+    set sharedMesh(value: Mesh2D) {
+        if (this._sharedMesh == value)
             return;
         let meshArrayDefine = new Array();
-        if (this._shareMesh) {
-            VertexMesh2D.getMeshDefine(this._shareMesh, meshArrayDefine);
+        if (this._sharedMesh) {
+            VertexMesh2D.getMeshDefine(this._sharedMesh, meshArrayDefine);
             for (var i: number = 0, n: number = meshArrayDefine.length; i < n; i++)
                 this._spriteShaderData.removeDefine(meshArrayDefine[i]);
-            this._shareMesh._removeReference()
+            this._sharedMesh._removeReference()
         }
         meshArrayDefine.length = 0;
         if (value) {
@@ -52,12 +51,12 @@ export class Mesh2DRender extends BaseRenderNode2D {
                 this._spriteShaderData.addDefine(meshArrayDefine[i]);
             value._addReference();
         }
-        this._shareMesh = value;
+        this._sharedMesh = value;
         this._changeMesh();
     }
 
-    get shareMesh(): Mesh2D {
-        return this._shareMesh;
+    get sharedMesh(): Mesh2D {
+        return this._sharedMesh;
     }
 
     /**
@@ -106,6 +105,50 @@ export class Mesh2DRender extends BaseRenderNode2D {
     }
 
     /**
+     * @en Rendering textures will not take effect if there is no UV in 2dmesh
+     * @zh 渲染纹理，如果2DMesh中没有uv，则不会生效 
+     */
+    set normalTexture(value: BaseTexture) {
+        if (value === this._normal2DTexture)
+            return;
+
+        if (this._normal2DTexture)
+            this._normal2DTexture._removeReference(1)
+
+        if (value)
+            value._addReference();
+        this._normal2DTexture = value;
+
+        this._spriteShaderData.setTexture(BaseRenderNode2D.NORMAL2DTEXTURE, value);
+        if (this._normal2DStrength > 0 && this._normal2DTexture)
+            this._spriteShaderData.addDefine(BaseRenderNode2D.SHADERDEFINE_LIGHT2DNORMAL_PARAM);
+        else this._spriteShaderData.removeDefine(BaseRenderNode2D.SHADERDEFINE_LIGHT2DNORMAL_PARAM);
+    }
+
+    get normalTexture(): BaseTexture {
+        return this._normal2DTexture;
+    }
+
+    /**
+     * @en normal strengh
+     * @zh 法线效果强度
+     */
+    set normalStrength(value: number) {
+        value = Math.max(0, Math.min(1, value)); //值应该在0~1之间
+        if (this._normal2DStrength === value)
+            return
+        this._normal2DStrength = value;
+        this._spriteShaderData.setNumber(BaseRenderNode2D.NORMAL2DSTRENGTH, value);
+        if (value > 0 && this._normal2DTexture)
+            this._spriteShaderData.addDefine(BaseRenderNode2D.SHADERDEFINE_LIGHT2DNORMAL_PARAM);
+        else this._spriteShaderData.removeDefine(BaseRenderNode2D.SHADERDEFINE_LIGHT2DNORMAL_PARAM);
+    }
+
+    get normalStrength() {
+        return this._normal2DStrength;
+    }
+
+    /**
      * @en Render material
      * @zh 渲染材质
      */
@@ -122,7 +165,7 @@ export class Mesh2DRender extends BaseRenderNode2D {
      * @internal
      */
     private _changeMesh() {
-        let submeshNum = this._shareMesh ? this._shareMesh.subMeshCount : 0;
+        let submeshNum = this._sharedMesh ? this._sharedMesh.subMeshCount : 0;
         if (submeshNum > this._renderElements.length) {
             for (var i = this._renderElements.length, n = submeshNum; n < i; i--) {
                 let element = this._renderElements[i];
@@ -134,7 +177,7 @@ export class Mesh2DRender extends BaseRenderNode2D {
             let element = this._renderElements[i];
             if (!element)
                 element = this._renderElements[i] = LayaGL.render2DRenderPassFactory.createRenderElement2D();
-            element.geometry = this._shareMesh.getSubMesh(i);
+            element.geometry = this._sharedMesh.getSubMesh(i);
             element.value2DShaderData = this._spriteShaderData;
             BaseRenderNode2D._setRenderElement2DMaterial(element, this._materials[i] ? this._materials[i] : Mesh2DRender.mesh2DDefaultMaterial);
             element.renderStateIsBySprite = false;
@@ -154,14 +197,12 @@ export class Mesh2DRender extends BaseRenderNode2D {
         let mat = context._curMat;
         let vec3 = Vector3._tempVector3;
         vec3.x = mat.a;
-        vec3.y = mat.b;
-        //vec3.z = px + mat.tx;
-        vec3.z = mat.tx + mat.a * px + mat.c * py;
+        vec3.y = mat.c;
+        vec3.z = px * mat.a + py * mat.c + mat.tx;
         this._spriteShaderData.setVector3(BaseRenderNode2D.NMATRIX_0, vec3);
-        vec3.x = mat.c;
+        vec3.x = mat.b;
         vec3.y = mat.d;
-        //vec3.z = py + mat.ty;
-        vec3.z = mat.ty + mat.b * px + mat.d * py;
+        vec3.z = px * mat.b + py * mat.d + mat.ty;
         this._spriteShaderData.setVector3(BaseRenderNode2D.NMATRIX_1, vec3);
         this._setRenderSize(context.width, context.height)
         context._copyClipInfoToShaderData(this._spriteShaderData);
@@ -185,5 +226,6 @@ export class Mesh2DRender extends BaseRenderNode2D {
         this._renderElements = [];
         this._materials = [];
         this._spriteShaderData.addDefine(BaseRenderNode2D.SHADERDEFINE_BASERENDER2D);
+        this._spriteShaderData.setColor(BaseRenderNode2D.BASERENDER2DCOLOR, this._color);
     }
 }

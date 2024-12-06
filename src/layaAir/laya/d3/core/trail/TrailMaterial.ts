@@ -4,6 +4,7 @@ import { RenderState } from "../../../RenderDriver/RenderModuleData/Design/Rende
 import { Shader3D } from "../../../RenderEngine/RenderShader/Shader3D";
 import { BaseTexture } from "../../../resource/BaseTexture";
 import { Material, MaterialRenderMode } from "../../../resource/Material";
+import { TrailShaderInit } from "./Shader/TrailShaderInit";
 
 /**
  * @en The `TrailMaterial` class is used to implement trail materials.
@@ -31,6 +32,7 @@ export class TrailMaterial extends Material {
 		TrailMaterial.MAINTEXTURE = Shader3D.propertyNameToID("u_MainTexture");
 		TrailMaterial.TINTCOLOR = Shader3D.propertyNameToID("u_MainColor");
 		TrailMaterial.TILINGOFFSET = Shader3D.propertyNameToID("u_TilingOffset");
+		TrailShaderInit.init();
 	}
 
 	/**
@@ -139,7 +141,7 @@ export class TrailMaterial extends Material {
 				this._shaderValues.removeDefine(TrailMaterial.SHADERDEFINE_ADDTIVEFOG);
 				break;
 			default:
-				throw new Error("ShurikenParticleMaterial : renderMode value error.");
+				throw new Error("renderMode value error: " + value);
 		}
 	}
 }
