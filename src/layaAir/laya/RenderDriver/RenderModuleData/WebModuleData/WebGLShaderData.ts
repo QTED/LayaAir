@@ -515,7 +515,7 @@ export class WebGLShaderData extends ShaderData {
 	 */
 	cloneTo(destObject: WebGLShaderData): void {
 		destObject.clearData();
-		var destData: { [key: string]: number | boolean | Vector2 | Vector3 | Vector4 | Matrix3x3 | Matrix4x4 | BaseTexture } = destObject._data;
+		var destData: { [key: string]: number | boolean | Vector2 | Vector3 | Vector4 | Matrix3x3 | Matrix4x4 | Resource } = destObject._data;
 
 		for (var k in this._data) {//TODO:需要优化,杜绝is判断，慢
 			var value: any = this._data[k];
