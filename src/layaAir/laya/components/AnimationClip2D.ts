@@ -315,9 +315,8 @@ export class AnimationClip2D extends Resource {
         let yp1 = frameOutTangent;
         let yp2 = nextframeIntangent;
 
-        if (!Number.isFinite(yp1) || !Number.isFinite(yp2)) {
-            return frameValue;
-        }
+        if (!Number.isFinite(yp1)) return frameValue;
+        if (!Number.isFinite(yp2)) return nextframeValue;
 
         yp1 = yp1 * dx / dy;
         yp2 = yp2 * dx / dy;
@@ -382,10 +381,8 @@ function getEase(name: string): Function {
 }
 
 function hermiteInterpolate(outTangent: number, inTangent: number, startValue: number, endValue: number, t: number, dur: number): number {
-    if (Math.abs(outTangent) == Infinity || Math.abs(inTangent) == Infinity) {
-        if (0 > outTangent || 0 < inTangent) return startValue;
-        return startValue;
-    }
+    if (!Number.isFinite(outTangent)) return startValue;
+    if (!Number.isFinite(inTangent)) return endValue;
     var t2 = t * t;
     var t3 = t2 * t;
     var a = 2.0 * t3 - 3.0 * t2 + 1.0;

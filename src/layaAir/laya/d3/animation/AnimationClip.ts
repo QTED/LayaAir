@@ -131,16 +131,15 @@ export class AnimationClip extends Resource {
 	 */
 	private _hermiteInterpolate(frame: FloatKeyframe, nextFrame: FloatKeyframe, t: number, dur: number): number {
 		var t0 = frame.outTangent, t1 = nextFrame.inTangent;
-		if (Number.isFinite(t0) && Number.isFinite(t1)) {
-			var t2 = t * t;
-			var t3 = t2 * t;
-			var a = 2.0 * t3 - 3.0 * t2 + 1.0;
-			var b = t3 - 2.0 * t2 + t;
-			var c = t3 - t2;
-			var d = -2.0 * t3 + 3.0 * t2;
-			return a * frame.value + b * t0 * dur + c * t1 * dur + d * nextFrame.value;
-		} else
-			return frame.value;
+		if (!Number.isFinite(t0)) return frame.value;
+		if (!Number.isFinite(t1)) return nextFrame.value;
+		var t2 = t * t;
+		var t3 = t2 * t;
+		var a = 2.0 * t3 - 3.0 * t2 + 1.0;
+		var b = t3 - 2.0 * t2 + t;
+		var c = t3 - t2;
+		var d = -2.0 * t3 + 3.0 * t2;
+		return a * frame.value + b * t0 * dur + c * t1 * dur + d * nextFrame.value;
 	}
 
 	/**
@@ -161,10 +160,9 @@ export class AnimationClip extends Resource {
 
 		var t0 = tan0.x, t1 = tan1.x;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.x, nextFrame.weightedMode.x)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.x = a * p0.x + b * t0 * dur + c * t1 * dur + d * p1.x;
-			else
-				out.x = p0.x;
+			if (!Number.isFinite(t0)) out.x = p0.x;
+			else if (!Number.isFinite(t1)) out.x = p1.x;
+			else out.x = a * p0.x + b * t0 * dur + c * t1 * dur + d * p1.x;
 		} else {
 			out.x = this._hermiteCurveSplineWeight(frame.value.x, frame.time, frame.outWeight.x, frame.outTangent.x,
 				nextFrame.value.x, nextFrame.time, nextFrame.inWeight.x, nextFrame.inTangent.x, t);
@@ -172,10 +170,9 @@ export class AnimationClip extends Resource {
 
 		t0 = tan0.y, t1 = tan1.y;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.y, nextFrame.weightedMode.y)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.y = a * p0.y + b * t0 * dur + c * t1 * dur + d * p1.y;
-			else
-				out.y = p0.y;
+			if (!Number.isFinite(t0)) out.y = p0.y;
+			else if (!Number.isFinite(t1)) out.y = p1.y;
+			else out.y = a * p0.y + b * t0 * dur + c * t1 * dur + d * p1.y;
 		} else {
 			out.y = this._hermiteCurveSplineWeight(frame.value.y, frame.time, frame.outWeight.y, frame.outTangent.y,
 				nextFrame.value.y, nextFrame.time, nextFrame.inWeight.y, nextFrame.inTangent.y, t);
@@ -183,10 +180,9 @@ export class AnimationClip extends Resource {
 
 		t0 = tan0.z, t1 = tan1.z;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.z, nextFrame.weightedMode.z)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.z = a * p0.z + b * t0 * dur + c * t1 * dur + d * p1.z;
-			else
-				out.z = p0.z;
+			if (!Number.isFinite(t0)) out.z = p0.z;
+			else if (!Number.isFinite(t1)) out.z = p1.z;
+			else out.z = a * p0.z + b * t0 * dur + c * t1 * dur + d * p1.z;
 		} else {
 			out.z = this._hermiteCurveSplineWeight(frame.value.z, frame.time, frame.outWeight.z, frame.outTangent.z,
 				nextFrame.value.z, nextFrame.time, nextFrame.inWeight.z, nextFrame.inTangent.z, t);
@@ -211,10 +207,9 @@ export class AnimationClip extends Resource {
 
 		var t0 = tan0.x, t1 = tan1.x;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.x, nextFrame.weightedMode.x)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.x = a * p0.x + b * t0 * dur + c * t1 * dur + d * p1.x;
-			else
-				out.x = p0.x;
+			if (!Number.isFinite(t0)) out.x = p0.x;
+			else if (!Number.isFinite(t1)) out.x = p1.x;
+			else out.x = a * p0.x + b * t0 * dur + c * t1 * dur + d * p1.x;
 		} else {
 			out.x = this._hermiteCurveSplineWeight(frame.value.x, frame.time, frame.outWeight.x, frame.outTangent.x,
 				nextFrame.value.x, nextFrame.time, nextFrame.inWeight.x, nextFrame.inTangent.x, t);
@@ -223,10 +218,9 @@ export class AnimationClip extends Resource {
 
 		t0 = tan0.y, t1 = tan1.y;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.y, nextFrame.weightedMode.y)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.y = a * p0.y + b * t0 * dur + c * t1 * dur + d * p1.y;
-			else
-				out.y = p0.y;
+			if (!Number.isFinite(t0)) out.y = p0.y;
+			else if (!Number.isFinite(t1)) out.y = p1.y;
+			else out.y = a * p0.y + b * t0 * dur + c * t1 * dur + d * p1.y;
 		} else {
 			out.y = this._hermiteCurveSplineWeight(frame.value.y, frame.time, frame.outWeight.y, frame.outTangent.y,
 				nextFrame.value.y, nextFrame.time, nextFrame.inWeight.y, nextFrame.inTangent.y, t);
@@ -234,10 +228,9 @@ export class AnimationClip extends Resource {
 
 		t0 = tan0.z, t1 = tan1.z;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.z, nextFrame.weightedMode.z)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.z = a * p0.z + b * t0 * dur + c * t1 * dur + d * p1.z;
-			else
-				out.z = p0.z;
+			if (!Number.isFinite(t0)) out.z = p0.z;
+			else if (!Number.isFinite(t1)) out.z = p1.z;
+			else out.z = a * p0.z + b * t0 * dur + c * t1 * dur + d * p1.z;
 		} else {
 			out.z = this._hermiteCurveSplineWeight(frame.value.z, frame.time, frame.outWeight.z, frame.outTangent.z,
 				nextFrame.value.z, nextFrame.time, nextFrame.inWeight.z, nextFrame.inTangent.z, t);
@@ -245,10 +238,9 @@ export class AnimationClip extends Resource {
 
 		t0 = tan0.w, t1 = tan1.w;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.w, nextFrame.weightedMode.w)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.w = a * p0.w + b * t0 * dur + c * t1 * dur + d * p1.w;
-			else
-				out.w = p0.w;
+			if (!Number.isFinite(t0)) out.w = p0.w;
+			else if (!Number.isFinite(t1)) out.w = p1.w;
+			else out.w = a * p0.w + b * t0 * dur + c * t1 * dur + d * p1.w;
 		} else {
 			out.w = this._hermiteCurveSplineWeight(frame.value.w, frame.time, frame.outWeight.w, frame.outTangent.w,
 				nextFrame.value.w, nextFrame.time, nextFrame.inWeight.w, nextFrame.inTangent.w, t);
@@ -270,20 +262,18 @@ export class AnimationClip extends Resource {
 
 		var t0 = tan0.x, t1 = tan1.x;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.x, nextFrame.weightedMode.x)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.x = a * p0.x + b * t0 * dur + c * t1 * dur + d * p1.x;
-			else
-				out.x = p0.x;
+			if (!Number.isFinite(t0)) out.x = p0.x;
+			else if (!Number.isFinite(t1)) out.x = p1.x;
+			else out.x = a * p0.x + b * t0 * dur + c * t1 * dur + d * p1.x;
 		} else {
 			out.x = this._hermiteCurveSplineWeight(frame.value.x, frame.time, frame.outWeight.x, frame.outTangent.x,
 				nextFrame.value.x, nextFrame.time, nextFrame.inWeight.x, nextFrame.inTangent.x, t);
 		}
 		t0 = tan0.y, t1 = tan1.y;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.y, nextFrame.weightedMode.y)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.y = a * p0.y + b * t0 * dur + c * t1 * dur + d * p1.y;
-			else
-				out.y = p0.y;
+			if (!Number.isFinite(t0)) out.y = p0.y;
+			else if (!Number.isFinite(t1)) out.y = p1.y;
+			else out.y = a * p0.y + b * t0 * dur + c * t1 * dur + d * p1.y;
 		} else {
 			out.y = this._hermiteCurveSplineWeight(frame.value.y, frame.time, frame.outWeight.y, frame.outTangent.y,
 				nextFrame.value.y, nextFrame.time, nextFrame.inWeight.y, nextFrame.inTangent.y, t);
@@ -291,10 +281,9 @@ export class AnimationClip extends Resource {
 
 		t0 = tan0.z, t1 = tan1.z;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.z, nextFrame.weightedMode.z)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.z = a * p0.z + b * t0 * dur + c * t1 * dur + d * p1.z;
-			else
-				out.z = p0.z;
+			if (!Number.isFinite(t0)) out.z = p0.z;
+			else if (!Number.isFinite(t1)) out.z = p1.z;
+			else out.z = a * p0.z + b * t0 * dur + c * t1 * dur + d * p1.z;
 		} else {
 			out.z = this._hermiteCurveSplineWeight(frame.value.z, frame.time, frame.outWeight.z, frame.outTangent.z,
 				nextFrame.value.z, nextFrame.time, nextFrame.inWeight.z, nextFrame.inTangent.z, t);
@@ -302,10 +291,9 @@ export class AnimationClip extends Resource {
 
 		t0 = tan0.w, t1 = tan1.w;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.w, nextFrame.weightedMode.w)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.w = a * p0.w + b * t0 * dur + c * t1 * dur + d * p1.w;
-			else
-				out.w = p0.w;
+			if (!Number.isFinite(t0)) out.w = p0.w;
+			else if (!Number.isFinite(t1)) out.w = p1.w;
+			else out.w = a * p0.w + b * t0 * dur + c * t1 * dur + d * p1.w;
 		} else {
 			out.w = this._hermiteCurveSplineWeight(frame.value.w, frame.time, frame.outWeight.w, frame.outTangent.w,
 				nextFrame.value.w, nextFrame.time, nextFrame.inWeight.w, nextFrame.inTangent.w, t);
@@ -327,10 +315,9 @@ export class AnimationClip extends Resource {
 
 		var t0 = tan0.x, t1 = tan1.x;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.x, nextFrame.weightedMode.x)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.x = a * p0.x + b * t0 * dur + c * t1 * dur + d * p1.x;
-			else
-				out.x = p0.x;
+			if (!Number.isFinite(t0)) out.x = p0.x;
+			else if (!Number.isFinite(t1)) out.x = p1.x;
+			else out.x = a * p0.x + b * t0 * dur + c * t1 * dur + d * p1.x;
 		} else {
 			out.x = this._hermiteCurveSplineWeight(frame.value.x, frame.time, frame.outWeight.x, frame.outTangent.x,
 				nextFrame.value.x, nextFrame.time, nextFrame.inWeight.x, nextFrame.inTangent.x, t);
@@ -338,10 +325,9 @@ export class AnimationClip extends Resource {
 
 		t0 = tan0.y, t1 = tan1.y;
 		if ((!frame.weightedMode) || this._weightModeHermite(frame.weightedMode.y, nextFrame.weightedMode.y)) {
-			if (Number.isFinite(t0) && Number.isFinite(t1))
-				out.y = a * p0.y + b * t0 * dur + c * t1 * dur + d * p1.y;
-			else
-				out.y = p0.y;
+			if (!Number.isFinite(t0)) out.y = p0.y;
+			else if (!Number.isFinite(t1)) out.y = p1.y;
+			else out.y = a * p0.y + b * t0 * dur + c * t1 * dur + d * p1.y;
 		} else {
 			out.y = this._hermiteCurveSplineWeight(frame.value.y, frame.time, frame.outWeight.y, frame.outTangent.y,
 				nextFrame.value.y, nextFrame.time, nextFrame.inWeight.y, nextFrame.inTangent.y, t);
@@ -366,9 +352,8 @@ export class AnimationClip extends Resource {
 		let yp1 = frameOutTangent;
 		let yp2 = nextframeIntangent;
 
-		if (!Number.isFinite(yp1) || !Number.isFinite(yp2)) {
-			return frameValue;
-		}
+		if (!Number.isFinite(yp1)) return frameValue;
+		if (!Number.isFinite(yp2)) return nextframeValue;
 
 		yp1 = yp1 * dx / dy;
 		yp2 = yp2 * dx / dy;
