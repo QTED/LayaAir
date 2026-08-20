@@ -28,6 +28,10 @@ export abstract class WebGLUniformBufferBase {
         }
     }
 
+    setBool(index: number, value: boolean) {
+        this.setInt(index, value ? 1 : 0);
+    }
+
     setFloat(index: number, value: number) {
         let uniform = this.descriptor.uniforms.get(index);
         if (uniform) {
@@ -147,7 +151,7 @@ export abstract class WebGLUniformBufferBase {
                         console.warn("ShaderDataType.Bool array not support");
                     }
                     else {
-                        this.setInt(index, data ? 1 : 0);
+                        this.setBool(index, data as boolean);
                     }
                     break;
                 case ShaderDataType.Int:
