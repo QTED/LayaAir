@@ -57,6 +57,9 @@ export class UniformBufferManager {
     //优化内存位置数据
     private _optimizeBufferPosArray: Array<UniformBufferCluster> = [];
 
+    /** Buffer resource identity change epoch used by cached BindGroups. */
+    bufferResourceChangeEpoch: number = 0;
+
     _useBigBuffer: boolean = true; //是否使用大内存模式
 
     //字节对齐
@@ -261,6 +264,11 @@ export class UniformBufferManager {
             this._needUpdateClusters.push(cluster);
             cluster._inManagerUpdateArray = true;
         }
+    }
+
+    /** @internal Notify cached resource users that a buffer binding became stale. */
+    _notifyBufferResourceChange() {
+        this.bufferResourceChangeEpoch++;
     }
 
     _addRemoveHoleCluster(cluster: UniformBufferCluster) {

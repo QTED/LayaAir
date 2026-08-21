@@ -89,6 +89,7 @@ export class UniformBufferCluster {
 
         //通知所有使用者
         this._blocks.forEach(block => block && block.user.notifyGPUBufferChange('expand'));
+        this.manager._notifyBufferResourceChange();
         return true;
     }
 
@@ -115,6 +116,7 @@ export class UniformBufferCluster {
             }
         }
         this._blocks.length--;
+        this.manager._notifyBufferResourceChange();
         return true;
     }
 
@@ -258,6 +260,8 @@ export class UniformBufferCluster {
                 ret = true;
             }
         }
+        if (ret)
+            this.manager._notifyBufferResourceChange();
         return ret;
     }
 
